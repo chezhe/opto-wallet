@@ -12,9 +12,6 @@ export default function TokenLogo({
   token: Token
   size: number
 }) {
-  if (!token) {
-    return null
-  }
   let icon = null
   let source
   if (typeof token.icon === 'string') {
@@ -63,7 +60,7 @@ export default function TokenLogo({
   } else if (token.contractId === 'wrap.near') {
     source = icons.WNEAR
   } else {
-    source = icons.NEAR_TOKEN
+    source = icons.TOKEN
   }
   return (
     <View

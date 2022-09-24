@@ -1,10 +1,10 @@
 import { StyleSheet, useWindowDimensions } from 'react-native'
 import { Text } from '../Themed'
 import Fonts from 'theme/Fonts'
+import { formatWalletAddress } from 'utils/format'
 import { Wallet } from 'types'
 import useColorScheme from 'hooks/useColorScheme'
 import Colors from 'theme/Colors'
-import WalletFactory from 'chain/WalletFactory'
 
 export default function Address({
   wallet,
@@ -36,7 +36,7 @@ export default function Address({
       ]}
       numberOfLines={numberOfLines}
     >
-      {ellipsis ? WalletFactory.formatAddress(wallet) : wallet.address}
+      {ellipsis ? formatWalletAddress(wallet) : wallet.address}
     </Text>
   )
 }
