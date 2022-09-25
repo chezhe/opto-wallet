@@ -1,8 +1,14 @@
-import { ColorSchemeName, useColorScheme as _useColorScheme } from 'react-native';
+import {
+  ColorSchemeName,
+  useColorScheme as _useColorScheme,
+} from 'react-native'
+import { useAppSelector } from 'store/hooks'
 
-// The useColorScheme value is always either light or dark, but the built-in
-// type suggests that it can be null. This will not happen in practice, so this
-// makes it a bit easier to work with.
 export default function useColorScheme(): NonNullable<ColorSchemeName> {
-  return _useColorScheme() as NonNullable<ColorSchemeName>;
+  const themeSetting = useAppSelector((state) => state.setting.theme)
+  const systemTheme = _useColorScheme() as NonNullable<ColorSchemeName>
+  if (!themeSetting || themeSetting.toLowerCase() === 'auto') {
+    return systemTheme
+  }
+  return themeSetting as NonNullable<ColorSchemeName>
 }
