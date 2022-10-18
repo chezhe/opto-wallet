@@ -1,1 +1,1 @@
-# xoth-wallet
+# opto-wallet

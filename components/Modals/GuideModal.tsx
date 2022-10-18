@@ -1,22 +1,22 @@
-import FastImage from 'react-native-fast-image'
-import { i18n } from 'locale'
-import { StyleSheet } from 'react-native'
-import Colors from 'theme/Colors'
-import useColorScheme from 'hooks/useColorScheme'
-import SheetHeader from 'components/common/SheetHeader'
-import { Text, View } from 'components/Themed'
-import Button from 'components/common/Button'
-import { useSafeAreaInsets } from 'react-native-safe-area-context'
+import FastImage from "react-native-fast-image";
+import { i18n } from "locale";
+import { StyleSheet } from "react-native";
+import Colors from "theme/Colors";
+import useColorScheme from "hooks/useColorScheme";
+import SheetHeader from "components/common/SheetHeader";
+import { Text, View } from "components/Themed";
+import Button from "components/common/Button";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 export default function GuideModal({
   guideFor,
   onClose,
 }: {
-  guideFor: 'dapp'
-  onClose: () => void
+  guideFor: "dapp";
+  onClose: () => void;
 }) {
-  const theme = useColorScheme()
-  const insets = useSafeAreaInsets()
+  const theme = useColorScheme();
+  const insets = useSafeAreaInsets();
   return (
     <View
       style={[
@@ -27,34 +27,34 @@ export default function GuideModal({
         },
       ]}
     >
-      <SheetHeader title={i18n.t('Guide')} />
+      <SheetHeader title={i18n.t("Guide")} />
       <View style={[styles.content, { paddingBottom: insets.bottom + 10 }]}>
         <FastImage
-          source={{ uri: 'https://xoth.deno.dev/compatible.png' }}
+          source={{ uri: "https://xoth.deno.dev/compatible.png" }}
           style={{ width: 240, height: 120, marginBottom: 10 }}
         />
         <Text style={styles.text}>
-          {i18n.t('To connect Xoth wallet, choose Near Wallet or MyNearWallet')}
+          {i18n.t("To connect Opto wallet, choose Near Wallet or MyNearWallet")}
         </Text>
         <Button
-          label={i18n.t('Got it')}
+          label={i18n.t("Got it")}
           primary
           filled={false}
           onPress={onClose}
         />
       </View>
     </View>
-  )
+  );
 }
 
 const styles = StyleSheet.create({
   content: {
     padding: 20,
     flex: 1,
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    alignItems: 'flex-start',
-    justifyContent: 'center',
+    flexDirection: "row",
+    flexWrap: "wrap",
+    alignItems: "flex-start",
+    justifyContent: "center",
   },
   logo: {
     width: 60,
@@ -66,4 +66,4 @@ const styles = StyleSheet.create({
     fontSize: 20,
     marginBottom: 20,
   },
-})
+});

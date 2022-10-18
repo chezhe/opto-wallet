@@ -5,19 +5,19 @@ const API = {
   testnet: {
     TOKEN_PRICE: 'https://testnet-indexer.ref-finance.com/list-token-price',
   },
-  indexer: 'https://dev.xoth.app',
+  indexer: 'https://dev.optowallet.com',
   kitwalletIndexer: {
     testnet: 'https://testnet-api.kitwallet.app',
     mainnet: 'https://api.kitwallet.app',
   },
   links: {
-    privacy: 'https://xoth.app/privacy',
-    android: 'https://play.google.com/store/apps/details?id=app.xoth.wallet',
-    help: 'https://docs.xoth.app/',
+    privacy: 'https://optowallet.com/privacy',
+    android: 'https://play.google.com/store/apps/details?id=app.opto.wallet',
+    help: 'https://docs.optowallet.com/',
     twitter: 'https://twitter.com/xothapp',
-    website: 'https://xoth.app',
+    website: 'https://optowallet.com',
     discord: 'https://discord.gg/CSBWyQz9JA',
-    github: 'https://github.com/nonceLabs/xoth-wallet',
+    github: 'https://github.com/nonceLabs/opto-wallet',
   },
 }
 
