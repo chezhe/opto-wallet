@@ -1,3 +1,10 @@
+# Wallet Security Criteria:
+
+A wallet project must have a significant portion of these security program features in place, and shall self-certify that they maintain a security program that is commensurate (sufficiently similar) or better than the elements of the program outlined below. A project may also certify that they have a significant program in place, but intend to enhance the program to a level commensurate with the program outlined below by a given date.
+
+Wallets shall checkbox a statement of compliance to be maintained on the wallet’s GitHub account or Website. The statement may qualitatively discuss the security program and include additional elements, or simply state that it is compliant with the program outlined below. When asserting that open items will be in place within some time period of being listed, target dates shall be included and clearly defined. The overall statement must be dated and the date shall be commensurate with the commit date. All wallet projects must maintain compliance while being included in the wallet listing/selector program. If a wallet is no longer in compliance, or no longer supported, the security statement must reflect that change and the wallet selector team shall be notified. The wallet project shall make verification of the following requirements as easy as possible--maximizing transparency through the use of relevant links pointing toward program descriptions, audit reports, etc. for the user/researcher.
+
+
 1. Has a security program in place that covers or is dedicated to the wallet and...
 
 2. Publishes information about its security program in an easily findable place.
@@ -79,3 +86,4 @@
 40. A user’s ability to recover their wallet under various circumstances should be clearly spelled out to the user when setting up the wallet.
 
 41. Communication between infrastructure elements should be secured to the maximum extent possible.
+    Please link to your the statement on your website or GitHub repo showing a statement of compliance. Please put link below (even if it is a placeholder).
