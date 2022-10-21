@@ -1,3 +1,3 @@
 # opto-wallet
 
-[Wallet Security Criteria](https://github.com/NonceLabs/opto-wallet/blob/main/Wallet%20Security%20Criteria.md)
+The project complies with the safety requirements described in [CONTRIBUTING.md](https://github.com/near/wallet-selector/blob/main/CONTRIBUTING.md#listing-criteria-for-third-party-wallet-on-wallet-selector)
