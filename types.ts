@@ -6,6 +6,8 @@ import {
 import { NativeStackScreenProps } from '@react-navigation/native-stack'
 import { ImageSourcePropType } from 'react-native'
 import { Notification } from 'expo-notifications'
+import type { Transaction } from '@near-wallet-selector/core'
+import { SuiMoveObject } from '@mysten/sui.js'
 
 declare global {
   namespace ReactNavigation {
@@ -15,19 +17,17 @@ declare global {
 
 export type RootStackParamList = {
   Root: NavigatorScreenParams<RootTabParamList> | undefined
-  Token: { token: Token }
+  TokenDetail: { token: Token }
+  DAppView: { project?: Project; url?: string }
   Transfer: { receiver?: string; token?: Token }
   NotFound: undefined
   Notification: { noti?: iNotification }
-  CategoryDApp: { category: Category }
   SearchDAppResult: { keyword: string }
   SearchDApp: undefined
   Scanner: { fromPage: string }
   WalletsManage: undefined
   WalletDetail: { wallet: Wallet }
   About: undefined
-  Validator: { address: string; myPools?: StakePool[] }
-  MyStaking: { pools: StakePool[] }
   Security: undefined
   NewContact: { contact?: Contact }
   PINCode: { onConfirmed: () => void }
@@ -38,10 +38,14 @@ export type RootStackParamList = {
   WalletExport: { wallet: Wallet }
   ChangePINCode: undefined
   Finance: undefined
-  Validators: undefined
+  ConnectLedger: { chain: Chain }
+  LedgerDevice: undefined
   Networks: undefined
   ChainNetworks: { chain?: Chain }
   NewNetwork: { network?: CustomNetwork; chain: Chain }
+  NFTDetail: { nft: NFTItem; metadata: NFTContractMetadata }
+  AuthorizedApps: undefined
+  SetupPINCode: undefined
 }
 
 export type RootStackScreenProps<Screen extends keyof RootStackParamList> =
@@ -50,7 +54,8 @@ export type RootStackScreenProps<Screen extends keyof RootStackParamList> =
 export type RootTabParamList = {
   Home: undefined
   Finance: undefined
-  Setting: undefined
+  Explore: undefined
+  Settings: undefined
 }
 
 export type RootTabScreenProps<Screen extends keyof RootTabParamList> =
@@ -68,11 +73,10 @@ export type NearPrice = {
 
 export enum AppChainType {
   ATOCHA = 'atocha',
-  BARNACLE = 'barnacle',
   DEBIO = 'debionetwork',
-  DEIP = 'deip',
   FUSOTAO = 'fusotao',
   MYRIAD = 'myriad',
+  DISCOVOL = 'discovol',
 }
 
 export type Token = {
@@ -80,14 +84,14 @@ export type Token = {
   symbol: string
   price: number
   balance: string
-  icon: ImageSourcePropType
+  icon: ImageSourcePropType | string
   decimals: number
   isNative?: boolean
   contractId?: string
   address?: string
   chain: Chain
-  appchainId?: AppChainType
-  networkType: NetworkType
+  networkType: CombineNetworkType
+  moveObjects?: SuiMoveObject[]
 }
 
 export type NFT = {
@@ -105,23 +109,20 @@ type URL = string
 export type AccountId = string
 
 export type Project = {
-  authorId: string
-  categories: string[]
-  createdAt: string
   dapp: URL
-  github: URL
+  logo: URL
+  title: string
+  oneliner?: string
+  website: URL
+}
+
+export interface DApp {
+  authorId: string
+  dapp: URL
   logo: URL
   title: string
   oneliner: string
   website: URL
-}
-
-export type Category = {
-  children: Category[]
-  count: number
-  indentation: number
-  name: string
-  url: URL
 }
 
 export type TxPreview = {
@@ -132,42 +133,6 @@ export type TxPreview = {
 }
 
 export type ToastType = 'success' | 'error' | 'info' | 'warning'
-
-export type TxArgs =
-  | {
-      gas: number
-      deposit: string
-      args_json: {
-        text: string
-      }
-      args_base64: string
-      method_name: string
-    }
-  | {
-      access_key: {
-        nonce: number
-        permission: {
-          permission_kind: string
-          permission_details: {
-            allowance: string
-            receiver_id: AccountId
-            method_names: string[]
-          }
-        }
-      }
-      public_key: string
-    }
-
-export type TxActivity = {
-  block_hash: string
-  block_timestamp: string
-  hash: string
-  action_index: number
-  signer_id: AccountId
-  receiver_id: string
-  action_kind: string
-  args: TxArgs
-}
 
 export enum LOGIN_ACCESS_TYPES {
   FULL_ACCESS = 'fullAccess',
@@ -189,15 +154,18 @@ export type NearSign = {
   callbackUrl?: string
 }
 
-export type StakePool = {
-  validator_id: string
-  deposit?: string
+export type NearLinkDrop = {
+  fundingContract: string
+  fundingKey: string
 }
 
 export enum PUB {
   REFRESH_TOKENLIST = 'REFRESH_TOKENLIST',
   TOAST_MESSAGE = 'TOAST_MESSAGE',
   TOAST_HIDE = 'TOAST_HIDE',
+  ON_DAPP_CONNECT = 'ON_DAPP_CONNECT',
+  ON_DAPP_DISCONNECT = 'ON_DAPP_DISCONNECT',
+  ON_DAPP_SIGN = 'ON_DAPP_SIGN',
 }
 
 export enum WC_STATUS {
@@ -226,6 +194,8 @@ export enum NetworkType {
   TESTNET = 'testnet',
 }
 
+export type CombineNetworkType = NetworkType | AppChainType
+
 export enum ButtonType {
   DEFAULT = 'default',
   PRIMARY = 'primary',
@@ -246,6 +216,7 @@ export enum Currency {
   USD = 'USD',
   EUR = 'EUR',
   CNY = 'CNY',
+  JPY = 'JPY',
 }
 
 export type CurrencyRate = {
@@ -272,11 +243,11 @@ export interface Wallet {
   address: string
   chain: Chain
   alias?: string
-  networkType: NetworkType
+  networkType: CombineNetworkType
   publicKey: string
-  appchainId?: AppChainType
   isLedger?: boolean
   customNetworkName?: string
+  avatar?: string
 }
 
 export interface CustomNetwork {
@@ -284,19 +255,22 @@ export interface CustomNetwork {
   nodeUrl: string
   type: NetworkType
   chain: Chain
+  [key: string]: any
 }
 
 export interface Contact {
   address: string
   chain: Chain
   alias: string
+  networkType: CombineNetworkType
+  avatar?: string
 }
 
 export interface SecureKeyStore {
   privateKey?: string
   publicKey: string
   chain: Chain
-  networkType: NetworkType
+  networkType: CombineNetworkType
   mnemonic?: string
   address: string
 }
@@ -318,17 +292,6 @@ export interface OctTx {
   toId: string
 }
 
-export type NearTx = {
-  block_hash: string
-  block_timestamp: string
-  hash: string
-  action_index: number
-  signer_id: AccountId
-  receiver_id: string
-  action_kind: string
-  args: TxArgs
-}
-
 export interface AppChainNode {
   id: AppChainType
   icon: ImageSourcePropType
@@ -345,12 +308,51 @@ export interface CreateAccount {
   action?: string
 }
 
+export interface WCEventPayload {
+  type: WC_STATUS
+  payload: any
+}
+
+export interface WCRequestParams {
+  chainId: string
+  request: {
+    method: 'near_signAndSendTransaction' | 'near_signAndSendTransactions'
+    params: {
+      transactions: Transaction[]
+    }
+  }
+}
+
+export interface WCRequest {
+  id: number
+  topic: string
+  wallet: Wallet
+  method: string
+  txs: Transaction[]
+  verifyOwner?: { accountId: string; message: string }
+}
+
 export interface SettingItem {
   icon: any
   title: string
   value?: any
   noChevron?: boolean
   onPress: () => void
+}
+
+export interface LedgerDevice {
+  id: string
+  isConnectable: boolean
+  localName: string
+  manufacturerData: any
+  name: string
+  mtu: number
+  overflowServiceUUIDs: any
+  rssi: number
+  serviceData: any
+  serviceUUIDs: string[]
+  solicitedServiceUUIDs: any
+  txPowerLevel: any
 }
 
 export interface EditorChoiceDapp {
@@ -368,32 +370,100 @@ export interface ChainDapps {
     subtitle: string
     items: Project[]
   }[]
-  categories: string[]
 }
 
 type NumberStr = string
 
-export interface NetworkBase {
+export interface BaseNetwork {
   name: string
   nodeUrl: string
-  icon?: ImageSourcePropType
-  type: NetworkType
+  type: CombineNetworkType
+  [key: string]: string | number
 }
 
-export interface NearNetwork extends NetworkBase {
-  networkId: NetworkType
-  helperUrl: string
-  contractCreateAccountUrl: string
-  lookupAccountIdSuffix: string
-  suffix: NearAccountIdSuffix
-  MIN_BALANCE_FOR_GAS: string
-  MIN_BALANCE_TO_CREATE: string
-  LINKDROP_GAS: string
-}
-
-export interface MarketItem {
-  title: string
+export interface MarketItem extends Project {
   subtitle: string
   url: string
-  logo: string
+}
+
+export interface MarketSection {
+  title: string
+  items: MarketItem[]
+}
+
+export enum TxType {
+  IN = 'IN',
+  OUT = 'OUT',
+  ADD_KEY = 'ADD_KEY',
+  DELETE_KEY = 'DELETE_KEY',
+  STAKE = 'STAKE',
+  FUNCTION_CALL = 'FUNCTION_CALL',
+  DEPLOY_CONTRACT = 'DEPLOY_CONTRACT',
+  CREATE_ACCOUNT = 'CREATE_ACCOUNT',
+  NFT = 'NFT',
+  UNKNOWN = 'UNKNOWN',
+}
+
+export interface BaseTx {
+  type: TxType
+  title: string
+  subtitle: string
+  hash: string
+  time: string | number
+  link: string
+  failed?: boolean
+  nft?: {
+    contractId: string
+    tokenId: string
+  }
+}
+
+export interface ChainMeta {
+  icon: ImageSourcePropType
+  chain: Chain
+  defaultNetworks: {
+    [key in CombineNetworkType]?: BaseNetwork
+  }
+  defaultNetworkType: CombineNetworkType
+  sources: WalletSource[]
+  default?: boolean
+  nativeTokens: Token[]
+}
+
+export interface BasePreviewSignParams {
+  [key: string]: any
+}
+
+export interface NFTItem {
+  token_id: string
+  owner_account_id: string
+  owner_id?: string
+  metadata: {
+    title: string
+    description: string
+    media: string
+    media_hash: string
+    copies: number
+    extra: string
+    reference: string
+    reference_hash: string
+  }
+}
+
+export interface NFTContractMetadata {
+  spec: string
+  name: string
+  symbol: string
+  icon: string
+  base_uri: string
+  reference: string
+  reference_hash: string
+  contract_account_id: string
+}
+
+export interface NFTsByCollection {
+  nfts: NFTItem[]
+  contract_metadata: NFTContractMetadata
+  block_timestamp_nanos: string
+  block_height: string
 }
