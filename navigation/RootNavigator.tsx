@@ -2,7 +2,12 @@ import { useNavigation } from '@react-navigation/native'
 import * as React from 'react'
 import { Platform } from 'react-native'
 import { createNativeStackNavigator } from '@react-navigation/native-stack'
-import { Infinite, SeaAndSun, Settings } from 'iconoir-react-native'
+import {
+  Coin,
+  Infinite,
+  Planet,
+  Settings as SettingsIcon,
+} from 'iconoir-react-native'
 import { useEffect, useRef } from 'react'
 import * as Notifications from 'expo-notifications'
 import * as Device from 'expo-device'
@@ -12,15 +17,16 @@ import Colors from 'theme/Colors'
 import useColorScheme from 'hooks/useColorScheme'
 import NotFoundScreen from 'screens/NotFoundScreen'
 import Home from 'screens/Home'
-import Setting from 'screens/Setting'
+import Explore from 'screens/Explore'
+import Settings from 'screens/Settings'
 import TokenDetail from 'screens/TokenDetail'
+import DAppView from 'screens/DAppView'
 import { RootTabParamList, RootTabScreenProps, RootStackParamList } from 'types'
 import Start from 'screens/Start'
 import Restore from 'screens/Restore'
 import Create from 'screens/Create'
 import Transfer from 'screens/Transfer'
 import NotificationScreen from 'screens/NotificationScreen'
-import CategoryDApp from 'screens/CategoryDApp'
 import SearchDAppResult from 'screens/SearchDAppResult'
 import Finance from 'screens/Finance'
 import WalletExport from 'screens/WalletExport'
@@ -30,23 +36,26 @@ import PINCode from 'screens/PINCode'
 import Security from 'screens/Security'
 import NewContact from 'screens/NewContact'
 import About from 'screens/About'
-import Validator from 'screens/Validator'
-import MyStaking from 'screens/MyStaking'
 import ContactsManage from 'screens/ContactsManage'
 import { useAppDispatch, useAppSelector } from 'store/hooks'
 import ChangePINCode from 'screens/ChangePINCode'
 import SearchDApp from 'screens/SearchDApp'
-import Validators from 'screens/Validators'
+import ConnectLedger from 'screens/ConnectLedger'
 import { i18n } from 'locale'
+import LedgerDevice from 'screens/LedgerDevice'
 import { fetchConfigure } from 'utils/fetch'
 import Networks from 'screens/Networks'
 import ChainNetworks from 'screens/ChainNetworks'
 import NewNetwork from 'screens/NewNetwork'
+import { usePostHog } from 'posthog-react-native'
 import {
   AnimatedTabBarNavigator,
   DotSize,
 } from 'react-native-animated-nav-tab-bar'
 import Fonts from 'theme/Fonts'
+import NFTDetail from 'screens/NFTDetail'
+import AuthorizedApps from 'screens/AuthorizedApps'
+import SetupPINCode from 'screens/SetupPINCode'
 
 Notifications.setNotificationHandler({
   handleNotification: async () => ({
@@ -97,12 +106,17 @@ export default function RootNavigator() {
   const responseListener = useRef<Subscription>()
 
   const dispatch = useAppDispatch()
+  const posthog = usePostHog()
   const _pushToken = useAppSelector((state) => state.setting.pushToken)
 
   useEffect(() => {
     registerForPushNotificationsAsync()
       .then((token) => {
         if (token !== _pushToken) {
+          posthog?.identify(undefined, {
+            pushToken: token,
+          })
+
           dispatch({
             type: 'setting/updatePushToken',
             payload: token,
@@ -137,8 +151,8 @@ export default function RootNavigator() {
 
     fetchConfigure().then((res) => {
       dispatch({
-        type: 'setting/updateExplorer',
-        payload: Platform.OS === 'ios' ? res.isExplorerEnabled : true,
+        type: 'setting/updateConfigure',
+        payload: Platform.OS === 'ios' ? res : {},
       })
     })
 
@@ -166,13 +180,18 @@ export default function RootNavigator() {
       />
       <Stack.Group screenOptions={{ presentation: 'card' }}>
         <Stack.Screen
-          name="Token"
+          name="TokenDetail"
           component={TokenDetail}
           options={{ header: () => null }}
         />
         <Stack.Screen
           name="Transfer"
           component={Transfer}
+          options={{ header: () => null }}
+        />
+        <Stack.Screen
+          name="DAppView"
+          component={DAppView}
           options={{ header: () => null }}
         />
         <Stack.Screen
@@ -183,16 +202,6 @@ export default function RootNavigator() {
         <Stack.Screen
           name="WalletExport"
           component={WalletExport}
-          options={{ header: () => null }}
-        />
-        <Stack.Screen
-          name="MyStaking"
-          component={MyStaking}
-          options={{ header: () => null }}
-        />
-        <Stack.Screen
-          name="CategoryDApp"
-          component={CategoryDApp}
           options={{ header: () => null }}
         />
         <Stack.Screen
@@ -246,13 +255,8 @@ export default function RootNavigator() {
           options={{ header: () => null }}
         />
         <Stack.Screen
-          name="Validators"
-          component={Validators}
-          options={{ header: () => null }}
-        />
-        <Stack.Screen
-          name="Validator"
-          component={Validator}
+          name="LedgerDevice"
+          component={LedgerDevice}
           options={{ header: () => null }}
         />
         <Stack.Screen
@@ -268,6 +272,21 @@ export default function RootNavigator() {
         <Stack.Screen
           name="NewNetwork"
           component={NewNetwork}
+          options={{ header: () => null }}
+        />
+        <Stack.Screen
+          name="NFTDetail"
+          component={NFTDetail}
+          options={{ header: () => null }}
+        />
+        <Stack.Screen
+          name="AuthorizedApps"
+          component={AuthorizedApps}
+          options={{ header: () => null }}
+        />
+        <Stack.Screen
+          name="SetupPINCode"
+          component={SetupPINCode}
           options={{ header: () => null }}
         />
       </Stack.Group>
@@ -299,6 +318,11 @@ export default function RootNavigator() {
         component={Create}
         options={{ header: () => null }}
       />
+      <Stack.Screen
+        name="ConnectLedger"
+        component={ConnectLedger}
+        options={{ header: () => null }}
+      />
     </Stack.Navigator>
   )
 }
@@ -307,6 +331,7 @@ const Tabs = AnimatedTabBarNavigator<RootTabParamList>()
 
 function BottomTabNavigator() {
   const theme = useColorScheme()
+  const { isExplorerEnabled } = useAppSelector((state) => state.setting)
 
   return (
     <Tabs.Navigator
@@ -314,6 +339,7 @@ function BottomTabNavigator() {
       appearance={{
         topPadding: 4,
         bottomPadding: 4,
+        floating: true,
         dotSize: DotSize.MEDIUM,
         tabBarBackground: Colors[theme].tabBarBg,
       }}
@@ -322,12 +348,6 @@ function BottomTabNavigator() {
         tabBarHideOnKeyboard: true,
       }}
       tabBarOptions={{
-        tabStyle:
-          Platform.OS === 'ios'
-            ? {
-                height: 82,
-              }
-            : {},
         labelStyle: {
           fontSize: 16,
           fontFamily: Fonts.heading,
@@ -347,7 +367,7 @@ function BottomTabNavigator() {
               focused: boolean
             }) => {
               return (
-                <SeaAndSun
+                <Coin
                   width={30}
                   height={30}
                   color={focused ? color : Colors[theme].text}
@@ -356,7 +376,7 @@ function BottomTabNavigator() {
               )
             },
             headerShown: false,
-            title: i18n.t('Asset'),
+            title: i18n.t('Assets'),
           }
         }}
       />
@@ -386,9 +406,33 @@ function BottomTabNavigator() {
           }
         }}
       />
+      {isExplorerEnabled && (
+        <Tabs.Screen
+          name="Explore"
+          component={Explore}
+          options={({ navigation }: RootTabScreenProps<'Explore'>) => ({
+            tabBarIcon: ({
+              color,
+              focused,
+            }: {
+              color: string
+              focused: boolean
+            }) => (
+              <Planet
+                width={30}
+                height={30}
+                color={focused ? color : Colors[theme].text}
+                strokeWidth={focused ? 2 : 1}
+              />
+            ),
+            headerShown: false,
+            title: i18n.t('Explore'),
+          })}
+        />
+      )}
       <Tabs.Screen
-        name="Setting"
-        component={Setting}
+        name="Settings"
+        component={Settings}
         options={{
           tabBarIcon: ({
             color,
@@ -397,7 +441,7 @@ function BottomTabNavigator() {
             color: string
             focused: boolean
           }) => (
-            <Settings
+            <SettingsIcon
               width={30}
               height={30}
               color={focused ? color : Colors[theme].text}
@@ -405,7 +449,7 @@ function BottomTabNavigator() {
             />
           ),
           headerShown: false,
-          title: i18n.t('Setting'),
+          title: i18n.t('Settings'),
         }}
       />
     </Tabs.Navigator>

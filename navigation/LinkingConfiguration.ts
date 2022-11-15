@@ -10,10 +10,11 @@ const linking: LinkingOptions<RootStackParamList> = {
       Root: {
         screens: {
           Home: 'Home',
-          Setting: 'Setting',
+          Settings: 'Settings',
         },
       },
       NotFound: '*',
+      DAppView: 'DAppView',
     },
   },
 }
