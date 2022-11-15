@@ -1,10 +1,10 @@
 import { i18n } from 'locale'
 import { StyleSheet, TouchableOpacity } from 'react-native'
-
+import { Skeleton } from 'moti/skeleton'
 import Colors from 'theme/Colors'
 import useColorScheme from 'hooks/useColorScheme'
 import { Token } from 'types'
-import { calcValue, formatBalance } from 'utils/format'
+import { calcValue, formatBalance, formatPrice } from 'utils/format'
 import TokenLogo from 'components/common/TokenLogo'
 import { Text, View } from 'components/Themed'
 
@@ -13,11 +13,13 @@ export default function TokenItem({
   onSelect,
   rate = 1,
   unit = '$',
+  isLoading = false,
 }: {
   item: Token
   onSelect: (item: Token) => void
   rate?: number
   unit?: string
+  isLoading?: boolean
 }) {
   const theme = useColorScheme()
   if (!item) {
@@ -43,22 +45,34 @@ export default function TokenItem({
           <View style={{ marginLeft: 16 }}>
             <Text style={styles.tokenName}>{item.symbol}</Text>
             <Text style={styles.tokenPrice}>
-              {i18n.numberToCurrency(Number((item.price * rate).toFixed(2)), {
-                unit,
-              })}
+              {formatPrice(item.price * rate, unit)}
             </Text>
           </View>
 
           <View>
-            <Text style={styles.tokenBalance}>
-              {`${formatBalance(item.balance, item.decimals)}`}
-            </Text>
+            <Skeleton
+              height={16}
+              show={isLoading}
+              radius="square"
+              colorMode={theme}
+            >
+              <Text style={styles.tokenBalance}>
+                {`${formatBalance(item.balance, item.decimals)}`}
+              </Text>
+            </Skeleton>
 
-            <Text style={styles.tokenValue}>
-              {i18n.numberToCurrency(calcValue(item, rate), {
-                unit,
-              })}
-            </Text>
+            <Skeleton
+              height={18}
+              show={isLoading}
+              radius="square"
+              colorMode={theme}
+            >
+              <Text style={styles.tokenValue}>
+                {i18n.numberToCurrency(calcValue(item, rate), {
+                  unit,
+                })}
+              </Text>
+            </Skeleton>
           </View>
         </View>
       </View>
@@ -93,13 +107,11 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: '600',
     textAlign: 'right',
-    lineHeight: 20,
   },
   tokenValue: {
     fontSize: 16,
     textAlign: 'right',
     color: '#666',
-    lineHeight: 20,
   },
   tokenPrice: {
     color: '#666',

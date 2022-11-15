@@ -18,16 +18,14 @@ import {
   Wallet,
 } from 'iconoir-react-native'
 import { Text, View } from './Themed'
-import { calcTotal, formatWalletAddress } from 'utils/format'
+import { calcTotal } from 'utils/format'
 import { useAppDispatch, useAppSelector } from 'store/hooks'
 import {
-  AppChainType,
   Chain,
   Currency,
   CurrencyRate,
   LEDGER_STATUS,
   LEDGER_STATUS_CHANGE_EVENT,
-  NetworkBase,
   Token,
 } from 'types'
 import { useNavigation } from '@react-navigation/native'
@@ -43,16 +41,17 @@ import Box from './common/Box'
 import NetworksModal from './Modals/NetworksModal'
 import Scanner from './Scanner'
 import icons from 'utils/icons'
-import { OCT_NETWORKS } from 'chain/polkadot/constants'
 import { CURRENCY_SYMBOL, DEFAULT_CURRENCY_RATE } from 'configure/setting'
-import { filterWalletToken } from 'chain/common'
-import { getAvaliableNetworks } from 'chain/common/network'
+import useWallet from 'hooks/useWallet'
+import { Skeleton } from 'moti/skeleton'
+import WcAPI from 'chain/WcAPI'
+import Avatar from './common/Avatar'
 
-export default function Banner() {
-  const wallet = useAppSelector((state) => state.wallet.current)
+export default function Banner({ isLoading }: { isLoading: boolean }) {
+  const { wallet, walletApi } = useWallet()
   const tokens = useAppSelector((state) => {
-    return state.asset.token.filter((t: Token) => {
-      return filterWalletToken(t, wallet)
+    return state.asset.tokens.filter((t: Token) => {
+      return walletApi?.filterWalletToken(t) ?? false
     })
   })
   const currencyRates: CurrencyRate = useAppSelector(
@@ -79,13 +78,6 @@ export default function Banner() {
 
   const modalHeight = height - 280 + (Platform.OS === 'android' ? 30 : 0)
 
-  let appchain: NetworkBase | undefined = undefined
-  if (wallet?.chain === Chain.OCT) {
-    appchain = OCT_NETWORKS[
-      wallet.appchainId ?? AppChainType.ATOCHA
-    ] as NetworkBase
-  }
-
   useEffect(() => {
     const onLedgerEvent = (
       msg: string,
@@ -104,16 +96,44 @@ export default function Banner() {
     }
   }, [])
 
-  const avNetworks = getAvaliableNetworks(wallet)
+  const avNetworks = walletApi?.getNetworks() || []
+  const network = walletApi?.getNetwork()
+
+  const onAvatarLoaded = (avatar: string) => {
+    dispatch({
+      type: 'wallet/setAvatar',
+      payload: {
+        avatar,
+        address: wallet?.address,
+      },
+    })
+  }
 
   return (
     <View style={[styles.banner]}>
       <View style={[styles.header, { top: insets.top }]}>
-        <Icon
-          isTransparent
-          icon={<Wallet width={28} height={28} color={Colors.white} />}
-          onPress={() => accountsRef?.current?.open()}
-        />
+        <Pressable onPress={() => accountsRef?.current?.open()}>
+          {wallet ? (
+            <Avatar
+              wallet={wallet}
+              size={36}
+              placeholder={
+                <Icon
+                  isTransparent
+                  icon={<Wallet width={28} height={28} color={Colors.white} />}
+                  onPress={() => accountsRef?.current?.open()}
+                />
+              }
+              onAvatarLoaded={onAvatarLoaded}
+            />
+          ) : (
+            <Icon
+              isTransparent
+              icon={<Wallet width={28} height={28} color={Colors.white} />}
+              onPress={() => accountsRef?.current?.open()}
+            />
+          )}
+        </Pressable>
 
         <Pressable
           onPress={() => {
@@ -131,19 +151,15 @@ export default function Banner() {
               borderColor: Colors.white,
             }}
           >
-            {!!appchain && (
-              <Image source={appchain?.icon!} style={styles.appchainIcon} />
-            )}
-            <Text style={styles.appchainName}>
-              {appchain?.name ??
-                wallet?.customNetworkName ??
-                wallet?.networkType}
+            <Text style={styles.networkName}>
+              {wallet?.customNetworkName ?? network?.name}
             </Text>
             {avNetworks.length > 1 && (
               <NavArrowDown width={20} height={20} color={Colors.white} />
             )}
           </Box>
         </Pressable>
+
         <Icon
           isTransparent
           icon={
@@ -176,19 +192,29 @@ export default function Banner() {
             }}
           >
             <Text style={[styles.account, { color: Colors.white }]}>
-              {formatWalletAddress(wallet)}
+              {walletApi?.formattedAddress()}
             </Text>
           </Pressable>
         </Box>
 
-        <Text style={styles.total}>
-          {i18n.numberToCurrency(
-            Number(calcTotal(tokens, currencyRates[currency])),
-            {
-              unit: CURRENCY_SYMBOL[currency],
-            }
-          )}
-        </Text>
+        <View style={{ height: 10 }} />
+
+        <Skeleton
+          width={200}
+          height={35}
+          show={isLoading}
+          radius="square"
+          colorMode={theme}
+        >
+          <Text style={styles.total}>
+            {i18n.numberToCurrency(
+              Number(calcTotal(tokens, currencyRates[currency])),
+              {
+                unit: CURRENCY_SYMBOL[currency],
+              }
+            )}
+          </Text>
+        </Skeleton>
       </View>
       <View style={styles.buttonGroup}>
         <Icon
@@ -204,6 +230,7 @@ export default function Banner() {
             navigation.navigate('Transfer', {})
           }}
         />
+
         <Icon
           icon={
             <QrCode
@@ -217,6 +244,32 @@ export default function Banner() {
         />
 
         <Scanner />
+
+        {!!wallet?.isLedger && (
+          <Icon
+            icon={
+              <Image
+                source={
+                  ledgerStatus === LEDGER_STATUS.CONNECTED
+                    ? icons.CONNECTED_LEDGER
+                    : icons.LEDGER_LOGO
+                }
+                style={{
+                  width: 50,
+                  height: 50,
+                  borderRadius: 25,
+                }}
+              />
+            }
+            onPress={() => {
+              if (ledgerStatus === LEDGER_STATUS.CONNECTED) {
+                navigation.navigate('LedgerDevice')
+              } else {
+                navigation.navigate('ConnectLedger', { chain: wallet.chain })
+              }
+            }}
+          />
+        )}
       </View>
       <Portal>
         <Modalize ref={networksRef} adjustToContentHeight>
@@ -246,6 +299,11 @@ export default function Banner() {
           <View style={{ flex: 1, height: modalHeight }}>
             <WalletsByChain
               onSelect={(w) => {
+                if (WcAPI.walletApi) {
+                  return Toast.error(
+                    i18n.t("Can't switch wallet when WalletConnect in use")
+                  )
+                }
                 dispatch({
                   type: 'wallet/setCurrent',
                   payload: w,
@@ -288,8 +346,8 @@ const styles = StyleSheet.create({
   total: {
     fontSize: 30,
     color: Colors.white,
-    marginTop: 10,
     fontFamily: Fonts.heading,
+    textAlign: 'center',
   },
   buttonGroup: {
     display: 'flex',
@@ -327,13 +385,7 @@ const styles = StyleSheet.create({
     fontFamily: Fonts.variable,
     color: Colors.white,
   },
-  appchainIcon: {
-    width: 20,
-    height: 20,
-    borderRadius: 10,
-    marginRight: 6,
-  },
-  appchainName: {
+  networkName: {
     color: Colors.white,
     fontSize: 16,
     fontFamily: Fonts.variable,
@@ -350,5 +402,12 @@ const styles = StyleSheet.create({
     borderRadius: 4,
     paddingHorizontal: 4,
     paddingVertical: 2,
+  },
+  avatar: {
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    borderWidth: StyleSheet.hairlineWidth,
+    margin: 7,
   },
 })

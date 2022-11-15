@@ -1,6 +1,6 @@
 import ScreenHeader from 'components/common/ScreenHeader'
 import * as LocalAuthentication from 'expo-local-authentication'
-import SettingBlock from 'components/Setting/SettingBlock'
+import SettingBlock from 'components/Settings/SettingBlock'
 import { View } from 'components/Themed'
 import { FaceId, KeyAlt } from 'iconoir-react-native'
 import { ScrollView, Switch } from 'react-native'

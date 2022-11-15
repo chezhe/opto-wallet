@@ -3,39 +3,37 @@ import { FlatList, RefreshControl, StyleSheet } from 'react-native'
 import * as PubSub from 'pubsub-js'
 import Banner from 'components/Banner'
 import { View } from 'components/Themed'
-import { useClient } from 'hooks/useClient'
-import { Chain, PUB, RootTabScreenProps, Token } from 'types'
+import { PUB, RootTabScreenProps, Token } from 'types'
 import { useAppDispatch, useAppSelector } from 'store/hooks'
-import { fetchDApp, fetchFixer } from 'utils/fetch'
-import { useSafeAreaInsets } from 'react-native-safe-area-context'
+import { fetchFixer } from 'utils/fetch'
 import Colors from 'theme/Colors'
 import useColorScheme from 'hooks/useColorScheme'
 import TokenItem from 'components/Asset/TokenItem'
-import { Near } from 'near-api-js'
-import { ApiPromise } from '@polkadot/api'
 import { CURRENCY_SYMBOL } from 'configure/setting'
-import { updateNearTokenList } from 'chain/near/token'
-import { updateAppChainTokenList } from 'chain/polkadot/token'
-import { filterWalletToken, sortWalletTokens } from 'chain/common'
+import { sortWalletTokens } from 'chain/common'
+import useWallet from 'hooks/useWallet'
+import UpgradeModal from 'components/Modals/UpgradeModal'
+import { useSafeAreaInsets } from 'react-native-safe-area-context'
 
 export default function Home({ navigation }: RootTabScreenProps<'Home'>) {
-  const wallet = useAppSelector((state) => state.wallet.current)
+  const { wallet, walletApi } = useWallet()
 
   const tokens = useAppSelector((state) => {
     return sortWalletTokens(
-      state.asset.token.filter((t: Token) => filterWalletToken(t, wallet))
+      state.asset.tokens.filter(
+        (t: Token) => walletApi?.filterWalletToken(t) ?? false
+      )
     )
   })
 
-  const { currencyRates, currentCurrency, isExplorerEnabled } = useAppSelector(
+  const { currencyRates, currentCurrency } = useAppSelector(
     (state) => state.setting
   )
 
   const [isLoading, setIsLoading] = useState(false)
+  const [isUpdatingTokenList, setIsUpdatingTokenList] = useState(false)
 
-  const client = useClient()
   const dispatch = useAppDispatch()
-  const networkType = wallet?.networkType
   const theme = useColorScheme()
 
   useEffect(() => {
@@ -45,49 +43,33 @@ export default function Home({ navigation }: RootTabScreenProps<'Home'>) {
   }, [wallet])
 
   useEffect(() => {
-    if (wallet && networkType) {
-      if (client) {
-        const fetchTokenList = async () => {
-          try {
-            if (wallet.chain === Chain.NEAR) {
-              await updateNearTokenList({
-                client: client as Near,
-                wallet,
-                dispatch,
-              })
-            } else if (wallet.chain === Chain.OCT) {
-              await updateAppChainTokenList({
-                client: client as ApiPromise,
-                wallet,
-                dispatch,
-              })
-            }
-          } catch (error) {
-            setIsLoading(false)
+    if (wallet && walletApi && wallet.address === walletApi.wallet.address) {
+      const updateTokenList = async () => {
+        try {
+          const payload = await walletApi?.getTokenList(tokens)
+          const { address, networkType } = payload
+          if (
+            address === wallet.address &&
+            networkType === wallet.networkType
+          ) {
+            dispatch({ type: 'asset/updateTokenList', payload })
           }
-        }
-
-        fetchTokenList()
-        const tick = setInterval(fetchTokenList, 30000)
-        const token = PubSub.subscribe(PUB.REFRESH_TOKENLIST, fetchTokenList)
-
-        return () => {
-          token && PubSub.unsubscribe(token)
-          tick && clearInterval(tick)
+        } catch (error) {
+          console.log(error)
         }
       }
-    }
-  }, [wallet?.address, networkType, client])
+      const fetchTokenList = async () => {
+        try {
+          setIsUpdatingTokenList(true)
+          await updateTokenList()
+          setIsUpdatingTokenList(false)
+        } catch (error) {
+          setIsUpdatingTokenList(false)
+        }
+      }
 
-  useEffect(() => {
-    fetchFixer().then((rates) => {
-      dispatch({
-        type: 'setting/updateCurrencyRate',
-        payload: { ...rates, USD: 1 },
-      })
-    })
-    if (isExplorerEnabled && wallet?.chain) {
-      fetchDApp(wallet?.chain)
+      walletApi
+        ?.getDAppList()
         .then((res) => {
           dispatch({
             type: 'dapp/updateChainDapps',
@@ -97,26 +79,48 @@ export default function Home({ navigation }: RootTabScreenProps<'Home'>) {
             },
           })
         })
-        .catch(console.error)
-    }
-  }, [isExplorerEnabled, wallet?.chain])
+        .catch(() => {})
 
-  const insets = useSafeAreaInsets()
+      fetchTokenList()
+      const tick = setInterval(updateTokenList, 30000)
+      const token = PubSub.subscribe(PUB.REFRESH_TOKENLIST, updateTokenList)
+
+      return () => {
+        token && PubSub.unsubscribe(token)
+        tick && clearInterval(tick)
+      }
+    }
+  }, [walletApi?.wallet.address])
+
+  useEffect(() => {
+    fetchFixer().then((rates) => {
+      dispatch({
+        type: 'setting/updateCurrencyRate',
+        payload: { ...rates, USD: 1 },
+      })
+    })
+  }, [])
+
   const onSelect = (item: Token) => {
     if (item) {
-      navigation.navigate('Token', { token: item })
+      navigation.navigate('TokenDetail', { token: item })
     }
   }
+
+  const insets = useSafeAreaInsets()
 
   return (
     <View style={styles.container}>
       <View
         style={{
           flex: 1,
-          backgroundColor: Colors.chain[wallet?.chain || Chain.NEAR],
+          backgroundColor: wallet?.chain
+            ? Colors.chain[wallet?.chain]
+            : Colors.black,
         }}
       >
-        <Banner />
+        <Banner isLoading={isUpdatingTokenList} />
+        <UpgradeModal />
         <FlatList
           data={tokens}
           keyExtractor={(item) => item.contractId || item?.symbol}
@@ -127,6 +131,7 @@ export default function Home({ navigation }: RootTabScreenProps<'Home'>) {
                 onSelect={onSelect}
                 rate={currencyRates[currentCurrency]}
                 unit={CURRENCY_SYMBOL[currentCurrency]}
+                isLoading={isUpdatingTokenList}
               />
             )
           }}
@@ -135,10 +140,13 @@ export default function Home({ navigation }: RootTabScreenProps<'Home'>) {
             borderTopRightRadius: 10,
             backgroundColor: Colors[theme].background,
           }}
-          contentContainerStyle={{}}
+          contentContainerStyle={{
+            paddingBottom: insets.bottom + 50,
+          }}
           refreshControl={
             <RefreshControl
               refreshing={isLoading}
+              tintColor={Colors.main}
               onRefresh={() => {
                 setIsLoading(true)
                 if (!isLoading) {
@@ -159,14 +167,5 @@ export default function Home({ navigation }: RootTabScreenProps<'Home'>) {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-  },
-  title: {
-    fontSize: 20,
-    fontWeight: 'bold',
-  },
-  separator: {
-    marginVertical: 30,
-    height: 1,
-    width: '80%',
   },
 })

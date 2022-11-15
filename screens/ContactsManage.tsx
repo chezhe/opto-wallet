@@ -1,7 +1,7 @@
 import { Empty } from 'components/common/Placeholder'
 import ScreenHeader from 'components/common/ScreenHeader'
 import AddressQRModal from 'components/Modals/AddressQRModal'
-import ContactItem from 'components/Setting/ContactItem'
+import ContactItem from 'components/Settings/ContactItem'
 import { View } from 'components/Themed'
 import useColorScheme from 'hooks/useColorScheme'
 import { i18n } from 'locale'

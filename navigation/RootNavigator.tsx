@@ -17,10 +17,8 @@ import Colors from 'theme/Colors'
 import useColorScheme from 'hooks/useColorScheme'
 import NotFoundScreen from 'screens/NotFoundScreen'
 import Home from 'screens/Home'
-import Explore from 'screens/Explore'
 import Settings from 'screens/Settings'
 import TokenDetail from 'screens/TokenDetail'
-import DAppView from 'screens/DAppView'
 import { RootTabParamList, RootTabScreenProps, RootStackParamList } from 'types'
 import Start from 'screens/Start'
 import Restore from 'screens/Restore'
@@ -40,9 +38,7 @@ import ContactsManage from 'screens/ContactsManage'
 import { useAppDispatch, useAppSelector } from 'store/hooks'
 import ChangePINCode from 'screens/ChangePINCode'
 import SearchDApp from 'screens/SearchDApp'
-import ConnectLedger from 'screens/ConnectLedger'
 import { i18n } from 'locale'
-import LedgerDevice from 'screens/LedgerDevice'
 import { fetchConfigure } from 'utils/fetch'
 import Networks from 'screens/Networks'
 import ChainNetworks from 'screens/ChainNetworks'
@@ -190,11 +186,6 @@ export default function RootNavigator() {
           options={{ header: () => null }}
         />
         <Stack.Screen
-          name="DAppView"
-          component={DAppView}
-          options={{ header: () => null }}
-        />
-        <Stack.Screen
           name="Notification"
           component={NotificationScreen}
           options={{ header: () => null }}
@@ -318,11 +309,6 @@ export default function RootNavigator() {
         component={Create}
         options={{ header: () => null }}
       />
-      <Stack.Screen
-        name="ConnectLedger"
-        component={ConnectLedger}
-        options={{ header: () => null }}
-      />
     </Stack.Navigator>
   )
 }
@@ -331,8 +317,7 @@ const Tabs = AnimatedTabBarNavigator<RootTabParamList>()
 
 function BottomTabNavigator() {
   const theme = useColorScheme()
-  const { isExplorerEnabled } = useAppSelector((state) => state.setting)
-
+  
   return (
     <Tabs.Navigator
       initialRouteName="Home"
@@ -406,30 +391,6 @@ function BottomTabNavigator() {
           }
         }}
       />
-      {isExplorerEnabled && (
-        <Tabs.Screen
-          name="Explore"
-          component={Explore}
-          options={({ navigation }: RootTabScreenProps<'Explore'>) => ({
-            tabBarIcon: ({
-              color,
-              focused,
-            }: {
-              color: string
-              focused: boolean
-            }) => (
-              <Planet
-                width={30}
-                height={30}
-                color={focused ? color : Colors[theme].text}
-                strokeWidth={focused ? 2 : 1}
-              />
-            ),
-            headerShown: false,
-            title: i18n.t('Explore'),
-          })}
-        />
-      )}
       <Tabs.Screen
         name="Settings"
         component={Settings}

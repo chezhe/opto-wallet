@@ -1,17 +1,14 @@
 import { createSlice } from '@reduxjs/toolkit'
-import { NATIVE_TOKENS } from 'chain/common/constants'
-import { NFT, Token, TxActivity } from 'types'
+import { Chain, NFT, Token } from 'types'
 
 interface AssetSlice {
-  token: Token[]
-  nft: NFT[]
-  activity: TxActivity[]
+  tokens: Token[]
+  nfts: NFT[]
 }
 
 const initialState: AssetSlice = {
-  token: NATIVE_TOKENS,
-  nft: [],
-  activity: [],
+  tokens: [],
+  nfts: [],
 }
 
 export const assetSlice = createSlice({
@@ -19,42 +16,33 @@ export const assetSlice = createSlice({
   initialState,
   reducers: {
     reset: (state) => {
-      state.token = NATIVE_TOKENS
+      state.tokens = state.tokens.filter((t) => t.isNative)
     },
-    updateNativeTokenBalance: (state, action) => {
-      state.token = state.token.map((t) => {
-        if (
-          t.isNative &&
-          t.chain === action.payload.chain &&
-          t.appchainId === action.payload.appchainId
-        ) {
-          return { ...t, balance: action.payload.balance }
+    updateTokenList: (state, action) => {
+      const { nativeToken, tokens } = action.payload
+      state.tokens = state.tokens.map((t) => {
+        if (t.isNative && t.chain === nativeToken.chain) {
+          if (t.chain === Chain.OCT) {
+            if (t.networkType === nativeToken.networkType) {
+              return {
+                ...t,
+                ...nativeToken,
+              }
+            } else {
+              return t
+            }
+          }
+          return {
+            ...t,
+            ...nativeToken,
+          }
         }
         return t
       })
-    },
-    updateNearPrice: (state, action) => {
-      state.token = state.token.map((t) => {
-        if (
-          t.isNative &&
-          t.chain === action.payload.chain &&
-          t.appchainId === action.payload.appchainId
-        ) {
-          return { ...t, price: action.payload.price }
-        }
-        return t
-      })
-    },
-    updateActivity: (state, action) => {
-      state.activity = action.payload
-    },
-    updateNft: (state, action) => {
-      state.nft = action.payload
-    },
-    updateLikelyTokens: (state, action) => {
+
       const newTokens: Token[] = []
-      action.payload.forEach((t: Token) => {
-        const existed = state.token.find(
+      tokens.forEach((t: Token) => {
+        const existed = state.tokens.find(
           (to) =>
             to.chain === t.chain &&
             to.contractId === t.contractId &&
@@ -68,16 +56,39 @@ export const assetSlice = createSlice({
           newTokens.push(t)
         }
       })
-      state.token.push(...newTokens)
+
+      state.tokens.push(...newTokens)
+    },
+    updateNft: (state, action) => {
+      state.nfts = action.payload
     },
     deleteWalletToken: (state, action) => {
-      state.token = state.token.filter((t) => {
+      state.tokens = state.tokens.filter((t) => {
         return t.address !== action.payload.address || t.isNative
       })
+    },
+    initNativeToken: (state, action) => {
+      const nativeTokens = action.payload
+      const newTokens = nativeTokens.filter((t: Token) => {
+        return !state.tokens.find((to) => {
+          if (t.chain === Chain.OCT) {
+            return (
+              to.chain === t.chain &&
+              to.isNative &&
+              to.networkType === t.networkType
+            )
+          }
+          return to.chain === t.chain && to.isNative
+        })
+      })
+
+      if (newTokens.length) {
+        state.tokens.push(...newTokens)
+      }
     },
   },
 })
 
-export const { updateNativeTokenBalance } = assetSlice.actions
+export const {} = assetSlice.actions
 
 export default assetSlice.reducer

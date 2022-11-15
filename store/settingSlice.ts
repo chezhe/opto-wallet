@@ -12,9 +12,14 @@ interface SettingSlice {
   contacts: Contact[]
   pincode: string
   isExplorerEnabled: boolean
+  isNFTEnabled: boolean
+  isLabEnabled: boolean
   networks: CustomNetwork[]
-  guide: {
+  tour: {
     [key: string]: boolean
+  }
+  links: {
+    [key: string]: string
   }
 }
 
@@ -30,9 +35,27 @@ const initialState: SettingSlice = {
   contacts: [],
   pincode: '',
   isExplorerEnabled: Platform.OS === 'android',
+  isNFTEnabled: Platform.OS === 'android',
+  isLabEnabled: false,
   networks: [],
-  guide: {
+  tour: {
     dapp: false,
+    common: false,
+    explore: false,
+  },
+  links: {
+    privacy: 'https://optowallet.com/privacy',
+    android: 'https://play.google.com/store/apps/details?id=app.opto.wallet',
+    help: 'https://docs.optowallet.com/',
+    twitter: 'https://twitter.com/optowallet',
+    website: 'http://optowallet.com/',
+    discord: 'https://discord.gg/Ta9yjbX9NR',
+    github: 'https://github.com/nonceLabs',
+    ledger: 'https://docs.optowallet.com/en/ledger',
+    telegram: 'https://t.me/+M_voGGoZmqA2MTQ1',
+    migrateFromNearWallet:
+      'https://docs.optowallet.com/en/migrate-from-nearwallet',
+    connectToLedger: 'https://docs.optowallet.com/en/connect-to-ledger',
   },
 }
 
@@ -40,10 +63,15 @@ export const settingSlice = createSlice({
   name: 'setting',
   initialState,
   reducers: {
-    reset: (state, action) => {},
-    doGuide: (state, action) => {
+    reset: (state, action) => {
+      state.pincode = ''
+      state.bioAuthEnabled = false
+      state.isDevMode = false
+    },
+    toured: (state, action) => {
+      if (!state.tour) state.tour = {}
       if (typeof action.payload === 'string') {
-        state.guide[action.payload] = true
+        state.tour[action.payload] = true
       }
     },
     updateAuth: (state, action) => {
@@ -114,9 +142,20 @@ export const settingSlice = createSlice({
     updateBioAuth: (state, action) => {
       state.bioAuthEnabled = action.payload
     },
-    updateExplorer: (state, action) => {
-      if (!state.isExplorerEnabled) {
-        state.isExplorerEnabled = action.payload
+    updateConfigure: (state, action) => {
+      const { isExplorerEnabled, isNFTEnabled, links, isLabEnabled } =
+        action.payload
+      if (!state.isExplorerEnabled && isExplorerEnabled) {
+        state.isExplorerEnabled = isExplorerEnabled
+      }
+      if (!state.isNFTEnabled && isNFTEnabled) {
+        state.isNFTEnabled = isNFTEnabled
+      }
+      if (typeof isLabEnabled === 'boolean') {
+        state.isLabEnabled = isLabEnabled
+      }
+      if (links) {
+        state.links = { ...state.links, ...links }
       }
     },
   },

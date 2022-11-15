@@ -34,7 +34,7 @@ import {
 import { useAppDispatch, useAppSelector } from "store/hooks";
 import Toast from "utils/toast";
 import { useEffect, useState } from "react";
-import SettingBlock from "components/Setting/SettingBlock";
+import SettingBlock from "components/Settings/SettingBlock";
 import ScreenLoading from "components/common/ScreenLoading";
 import icons from "utils/icons";
 import Fonts from "theme/Fonts";
