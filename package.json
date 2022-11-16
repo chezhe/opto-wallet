@@ -81,7 +81,6 @@
     "near-hd-key": "^1.2.1",
     "patch-package": "^6.5.0",
     "path-browserify": "^1.0.1",
-    "posthog-react-native": "^2.2.0",
     "process": "^0.11.10",
     "pubsub-js": "^1.9.4",
     "react": "18.1.0",

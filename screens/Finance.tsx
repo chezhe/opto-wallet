@@ -5,7 +5,7 @@ import {
   StyleSheet,
   useWindowDimensions,
 } from 'react-native'
-import NearStaking from 'components/Staking/NearStaking'
+import Staking from 'components/Finance/Staking'
 import { View } from 'components/Themed'
 import Colors from 'theme/Colors'
 import useColorScheme from 'hooks/useColorScheme'
@@ -19,31 +19,37 @@ import {
 } from 'react-native-tab-view'
 import { useState } from 'react'
 import { useSafeAreaInsets } from 'react-native-safe-area-context'
-import Market from 'components/Staking/Market'
+import Market from 'components/Finance/Market'
+import NFT from 'components/Finance/NFT'
 import { useAppSelector } from 'store/hooks'
-import NoStaking from 'components/Staking/NoStaking'
-import { Chain } from 'types'
 
 export default function Finance() {
-  const wallet = useAppSelector((state) => state.wallet.current)
-  const { width } = useWindowDimensions()
-  const [index, setIndex] = useState(0)
-  const [routes] = useState([
+  const DEFAULT_ROUTES = [
     { key: 'staking', title: i18n.t('Staking') },
     { key: 'market', title: i18n.t('Market') },
-  ])
+    { key: 'nft', title: 'NFT' },
+  ]
 
-  let staking = NoStaking
-  if (wallet?.chain === Chain.NEAR) {
-    staking = NearStaking
-  }
+  const { isNFTEnabled } = useAppSelector((state) => state.setting)
+  const { width } = useWindowDimensions()
+  const [index, setIndex] = useState(0)
+  const [routes] = useState(
+    DEFAULT_ROUTES.filter((t) => {
+      if (t.key === 'nft') {
+        return isNFTEnabled
+      }
+      return true
+    })
+  )
+
   const renderScene = SceneMap({
-    staking,
+    staking: Staking,
     market: Market,
+    nft: NFT,
   })
   const insets = useSafeAreaInsets()
   const theme = useColorScheme()
-
+  
   const renderTabBar = (
     props: SceneRendererProps & { navigationState: NavigationState<Route> }
   ) => {
@@ -68,7 +74,9 @@ export default function Finance() {
                   borderColor: index === i ? Colors[theme].text : 'transparent',
                 },
               ]}
-              onPress={() => setIndex(i)}
+              onPress={() => {
+                setIndex(i)
+              }}
             >
               <Animated.Text
                 style={[styles.heading, { opacity, color: Colors[theme].text }]}

@@ -9738,11 +9738,6 @@ postcss-value-parser@^4.0.2, postcss-value-parser@^4.2.0:
   resolved "https://registry.npmjs.org/postcss-value-parser/-/postcss-value-parser-4.2.0.tgz#723c09920836ba6d3e5af019f92bc0971c02e514"
   integrity sha512-1NNCs6uurfkVbeXG4S8JFT9t19m45ICnif8zWLd5oPSZ50QnwMfK+H3jv408d4jw/7Bttv5axS5IiHoLaVNHeQ==
 
-posthog-react-native@^2.2.0:
-  version "2.2.0"
-  resolved "https://registry.npmjs.org/posthog-react-native/-/posthog-react-native-2.2.0.tgz#577c6233f3f05e5f8650faf5794a851d3abbef0f"
-  integrity sha512-mIVTaXsnWaxBPdBNd5o1uVVngzl4jLzhGXw1iikCLPHHoYqVXJdsBUyYtb6qE9E9XL3bGsdNbt1C6gVtB0qZ6Q==
-
 prebuild-install@^7.1.0:
   version "7.1.1"
   resolved "https://registry.npmjs.org/prebuild-install/-/prebuild-install-7.1.1.tgz#de97d5b34a70a0c81334fd24641f2a1702352e45"

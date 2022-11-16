@@ -43,7 +43,6 @@ import { fetchConfigure } from 'utils/fetch'
 import Networks from 'screens/Networks'
 import ChainNetworks from 'screens/ChainNetworks'
 import NewNetwork from 'screens/NewNetwork'
-import { usePostHog } from 'posthog-react-native'
 import {
   AnimatedTabBarNavigator,
   DotSize,
@@ -102,17 +101,12 @@ export default function RootNavigator() {
   const responseListener = useRef<Subscription>()
 
   const dispatch = useAppDispatch()
-  const posthog = usePostHog()
   const _pushToken = useAppSelector((state) => state.setting.pushToken)
 
   useEffect(() => {
     registerForPushNotificationsAsync()
       .then((token) => {
         if (token !== _pushToken) {
-          posthog?.identify(undefined, {
-            pushToken: token,
-          })
-
           dispatch({
             type: 'setting/updatePushToken',
             payload: token,
