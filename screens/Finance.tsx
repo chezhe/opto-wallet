@@ -20,32 +20,19 @@ import {
 import { useState } from 'react'
 import { useSafeAreaInsets } from 'react-native-safe-area-context'
 import Market from 'components/Finance/Market'
-import NFT from 'components/Finance/NFT'
-import { useAppSelector } from 'store/hooks'
 
 export default function Finance() {
-  const DEFAULT_ROUTES = [
+  const routes = [
     { key: 'staking', title: i18n.t('Staking') },
     { key: 'market', title: i18n.t('Market') },
-    { key: 'nft', title: 'NFT' },
   ]
 
-  const { isNFTEnabled } = useAppSelector((state) => state.setting)
   const { width } = useWindowDimensions()
   const [index, setIndex] = useState(0)
-  const [routes] = useState(
-    DEFAULT_ROUTES.filter((t) => {
-      if (t.key === 'nft') {
-        return isNFTEnabled
-      }
-      return true
-    })
-  )
 
   const renderScene = SceneMap({
     staking: Staking,
     market: Market,
-    nft: NFT,
   })
   const insets = useSafeAreaInsets()
   const theme = useColorScheme()
