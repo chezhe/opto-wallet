@@ -13,7 +13,7 @@ export default function InfoItem({
   valueStyle = {},
 }: {
   title: string
-  value: string | string[]
+  value: string | string[] | number | number[]
   larger?: boolean
   titleStyle?: TextStyle
   valueStyle?: TextStyle

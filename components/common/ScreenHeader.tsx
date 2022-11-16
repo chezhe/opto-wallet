@@ -1,12 +1,6 @@
 import { useNavigation } from '@react-navigation/native'
 import { NavArrowLeft } from 'iconoir-react-native'
-import {
-  StyleSheet,
-  TouchableOpacity,
-  ViewStyle,
-  StyleProp,
-  Pressable,
-} from 'react-native'
+import { StyleSheet, ViewStyle, StyleProp, Pressable } from 'react-native'
 import { useSafeAreaInsets } from 'react-native-safe-area-context'
 import Colors from 'theme/Colors'
 import useColorScheme from 'hooks/useColorScheme'
@@ -16,11 +10,13 @@ import Styles from 'theme/Styles'
 
 export default function ScreenHeader({
   title,
+  onBack,
   isBackable = true,
   style,
   rightEle = null,
 }: {
   title: string
+  onBack?: () => void
   isBackable?: boolean
   style?: StyleProp<ViewStyle>
   rightEle?: any
@@ -32,10 +28,21 @@ export default function ScreenHeader({
     <View style={[styles.header, { paddingTop: insets.top }, style]}>
       <View style={styles.row}>
         {isBackable ? (
-          <Pressable style={Styles.row} onPress={() => navigation.goBack()}>
+          <Pressable
+            style={Styles.row}
+            onPress={() => {
+              if (onBack) {
+                onBack()
+              } else {
+                navigation.goBack()
+              }
+            }}
+          >
             <NavArrowLeft color={Colors[theme].link} width={40} height={40} />
 
-            <Text style={[styles.headerText]}>{title}</Text>
+            <Text style={[styles.headerText]} numberOfLines={1}>
+              {title}
+            </Text>
           </Pressable>
         ) : (
           <Text style={[styles.headerText, { marginLeft: 20 }]}>{title}</Text>
@@ -59,6 +66,7 @@ const styles = StyleSheet.create({
   headerText: {
     fontFamily: Fonts.heading,
     fontSize: 30,
+    maxWidth: 250,
   },
   icon: {
     width: 36,

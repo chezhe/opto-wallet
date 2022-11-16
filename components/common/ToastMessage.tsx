@@ -75,6 +75,7 @@ export default function ToastMessage() {
         top: 0,
         left: 0,
         width,
+        zIndex: 10000,
         transform: [
           {
             translateY: phPosY,

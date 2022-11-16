@@ -10,6 +10,7 @@ export default function Button({
   label,
   onPress,
   style,
+  textColor,
   filled = true,
   size = 'large',
   icon = null,
@@ -20,6 +21,7 @@ export default function Button({
 }: {
   label: string
   onPress: () => void
+  textColor?: string
   filled?: boolean
   size?: 'small' | 'medium' | 'large'
   style?: any
@@ -45,9 +47,9 @@ export default function Button({
       },
     },
     text: {
-      default: Colors[theme].text,
-      primary: theme === 'dark' ? Colors.black : 'white',
-      danger: 'white',
+      default: textColor || Colors[theme].text,
+      primary: textColor || (theme === 'dark' ? Colors.black : Colors.white),
+      danger: textColor || Colors.white,
     },
   }
   return (

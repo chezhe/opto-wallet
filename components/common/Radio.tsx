@@ -5,22 +5,24 @@ import Colors from 'theme/Colors'
 export default function Radio({
   checked,
   disabled,
+  color = Colors.green,
   size = 24,
 }: {
   checked: boolean
   disabled?: boolean
   size?: number
+  color?: string
 }) {
   return checked ? (
     <View
       style={{
-        backgroundColor: Colors.green,
+        backgroundColor: color || Colors.green,
         borderRadius: 12,
       }}
     >
       <CheckCircledOutline width={size} height={size} color={Colors.white} />
     </View>
   ) : disabled ? null : (
-    <Circle width={size} height={size} color={Colors.green} />
+    <Circle width={size} height={size} color={color || Colors.green} />
   )
 }

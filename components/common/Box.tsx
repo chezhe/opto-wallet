@@ -32,7 +32,7 @@ export default function Box({
   direction?: 'row' | 'column'
   style?: ViewStyle
   border?: boolean
-  gap?: 'none' | 'small' | 'medium' | 'large' | 'xlarge' | 'xxlarge'
+  gap?: 'none' | 'xsmall' | 'small' | 'medium' | 'large' | 'xlarge' | 'xxlarge'
   pad?: 'none' | 'small' | 'medium' | 'large' | 'xlarge'
   margin?: 'none' | 'small' | 'medium' | 'large'
   full?: boolean
@@ -76,6 +76,10 @@ export default function Box({
 }
 
 const styles = StyleSheet.create({
+  xsmall: {
+    width: 4,
+    height: 4,
+  },
   small: {
     width: 8,
     height: 8,

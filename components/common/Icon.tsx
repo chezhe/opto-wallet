@@ -7,11 +7,13 @@ export default function Icon({
   onPress,
   isTransparent = false,
   icon = null,
+  style = {},
 }: {
   backgroundColor?: string
   onPress?: () => void
   isTransparent?: boolean
   icon?: any
+  style?: any
 }) {
   const theme = useColorScheme()
 
@@ -28,6 +30,7 @@ export default function Icon({
         {
           marginHorizontal: isTransparent ? 0 : 10,
         },
+        style,
       ]}
       onPress={onPress}
     >

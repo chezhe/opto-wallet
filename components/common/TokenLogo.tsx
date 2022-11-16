@@ -9,9 +9,12 @@ export default function TokenLogo({
   token,
   size,
 }: {
-  token: Token
+  token: Pick<Token, 'icon' | 'contractId'>
   size: number
 }) {
+  if (!token) {
+    return null
+  }
   let icon = null
   let source
   if (typeof token.icon === 'string') {
@@ -60,7 +63,7 @@ export default function TokenLogo({
   } else if (token.contractId === 'wrap.near') {
     source = icons.WNEAR
   } else {
-    source = icons.TOKEN
+    source = icons.COIN
   }
   return (
     <View

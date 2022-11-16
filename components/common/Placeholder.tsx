@@ -4,20 +4,20 @@ import Fonts from 'theme/Fonts'
 import { EmojiLookTop } from 'iconoir-react-native'
 import Colors from 'theme/Colors'
 import icons from 'utils/icons'
-import { Plane } from 'react-native-animated-spinkit'
+import { CircleFade } from 'react-native-animated-spinkit'
 
 export function Empty({
   title,
-  icon,
+  source,
   style = {},
 }: {
   title: string
-  icon?: ImageSourcePropType
+  source?: ImageSourcePropType
   style?: ViewStyle
 }) {
   return (
     <View style={[styles.content, style]}>
-      <Image source={icons.GHOST} style={styles.image} />
+      <Image source={source || icons.GHOST} style={styles.image} />
       <Text style={styles.placeholder}>{title}</Text>
     </View>
   )
@@ -26,22 +26,38 @@ export function Empty({
 export function Loading({ title }: { title: string }) {
   return (
     <View style={styles.content}>
-      <Plane size={100} color={Colors.gray9} />
+      <CircleFade size={100} color={Colors.gray9} />
       <Text style={styles.placeholder}>{title}</Text>
     </View>
   )
 }
 
-export function ComingSoon({ title = 'Coming Soon' }: { title?: string }) {
+export function ComingSoon({
+  title = 'Coming Soon',
+  source,
+}: {
+  title?: string
+  source?: ImageSourcePropType
+}) {
   return (
     <View style={[styles.content, { justifyContent: 'flex-start' }]}>
-      <Text style={[styles.placeholder, { marginBottom: 20 }]}>{title}</Text>
-      <EmojiLookTop
-        width={100}
-        height={100}
-        color={Colors.gray9}
-        strokeWidth={1}
-      />
+      {source ? (
+        <Image
+          source={source}
+          style={{
+            width: 150,
+            height: 150,
+          }}
+        />
+      ) : (
+        <EmojiLookTop
+          width={100}
+          height={100}
+          color={Colors.gray9}
+          strokeWidth={1}
+        />
+      )}
+      <Text style={[styles.placeholder, { marginTop: 20 }]}>{title}</Text>
     </View>
   )
 }
@@ -55,8 +71,8 @@ const styles = StyleSheet.create({
     marginTop: 50,
   },
   image: {
-    width: 100,
-    height: 100,
+    width: 150,
+    height: 150,
   },
   placeholder: {
     fontSize: 20,
