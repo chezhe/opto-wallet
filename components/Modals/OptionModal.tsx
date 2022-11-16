@@ -108,7 +108,7 @@ export default function OptionModal({
           onPress={async () => {
             try {
               setIsCopied(true)
-              await Clipboard.setString(currentUrl)
+              await Clipboard.setStringAsync(currentUrl)
               setTimeout(() => {
                 setIsCopied(false)
               }, 1000)

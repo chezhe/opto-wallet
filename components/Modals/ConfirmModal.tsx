@@ -28,7 +28,7 @@ export default function ConfirmModal({
   iconWrapColor: string
   subtitle: string
   onCancel: () => void
-  onConfirm: () => void
+  onConfirm: () => Promise<void>
   cancelLabel?: string
   confirmLabel?: string
   isLoading?: boolean
@@ -63,26 +63,28 @@ export default function ConfirmModal({
         )}
         {!!subtitle && <Text style={styles.subtitle}>{i18n.t(subtitle)}</Text>}
         {content}
-        <Box justify="space-between" gap="medium" style={{ marginTop: 30 }}>
+      </Box>
+      <View style={styles.buttonGroup}>
+        {!(isLoading || isConfirming) && (
           <Button
             filled={false}
             label={i18n.t(cancelLabel)}
             onPress={onCancel}
             disabled={isLoading || isConfirming}
           />
-          <Button
-            filled={false}
-            label={i18n.t(confirmLabel)}
-            isLoading={isLoading || isConfirming}
-            onPress={async () => {
-              setIsConfirming(true)
-              await onConfirm()
-              setIsConfirming(false)
-            }}
-            primary
-          />
-        </Box>
-      </Box>
+        )}
+        <Button
+          filled={isLoading}
+          label={i18n.t(confirmLabel)}
+          isLoading={isLoading || isConfirming}
+          onPress={async () => {
+            setIsConfirming(true)
+            await onConfirm()
+            setIsConfirming(false)
+          }}
+          primary
+        />
+      </View>
     </View>
   )
 }
@@ -103,5 +105,12 @@ const styles = StyleSheet.create({
     width: 80,
     height: 80,
     borderRadius: 40,
+  },
+  buttonGroup: {
+    paddingHorizontal: 20,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-around',
+    paddingBottom: 10,
   },
 })

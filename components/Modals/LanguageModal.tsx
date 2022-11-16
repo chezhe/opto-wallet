@@ -4,7 +4,7 @@ import Toast from 'utils/toast'
 import SheetModal from 'components/common/SheetModal'
 
 export default function LanguageModal({ onClose }: { onClose: () => void }) {
-  const items = ['en', 'zh']
+  const items = ['en', 'zh', 'ja', 'es', 'fr']
   return (
     <SheetModal
       title={i18n.t('Language')}

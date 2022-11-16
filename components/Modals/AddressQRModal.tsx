@@ -28,7 +28,7 @@ export default function AddressQRModal({
   onManage,
   isMine,
 }: {
-  wallet: Pick<Wallet, 'address' | 'alias'> | undefined
+  wallet: Pick<Wallet, 'address' | 'alias' | 'avatar'> | undefined
   onClose: () => void
   onManage?: () => void
   isMine?: boolean
@@ -87,10 +87,11 @@ export default function AddressQRModal({
         <NativeView style={styles.qrcodeWrap} ref={qrcodeRef}>
           <QRCode
             size={260}
-            logo={icons.ABOUT}
-            logoBackgroundColor="transparent"
+            logo={wallet.avatar ? { uri: wallet.avatar } : icons.ABOUT}
+            logoBackgroundColor="white"
             logoMargin={5}
             logoSize={50}
+            logoBorderRadius={30}
             value={wallet?.address ?? ''}
           />
         </NativeView>
