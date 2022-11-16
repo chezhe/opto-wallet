@@ -28,7 +28,7 @@ import {
   Token,
   TxPreview,
 } from 'types'
-import TokenItem from 'components/Asset/TokenItem'
+import TokenItem from 'components/Assets/TokenItem'
 import { useSafeAreaInsets } from 'react-native-safe-area-context'
 import Box from 'components/common/Box'
 import AnimatedInput from 'components/common/AnimatedInput'

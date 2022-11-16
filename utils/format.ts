@@ -1,7 +1,24 @@
 import Decimal from 'decimal.js'
+import { i18n } from 'locale'
 import _ from 'lodash'
-import { Chain, Token, Wallet } from 'types'
+import { Token } from 'types'
 import URLParse from 'url-parse'
+
+export const formatPrice = (price: number, unit: string) => {
+  let precision = 2
+  if (price === 0) {
+    precision = 0
+  } else if (price < 0.01) {
+    precision = 5
+  } else if (price > 100) {
+    precision = 0
+  }
+
+  return i18n.numberToCurrency(price, {
+    unit,
+    precision,
+  })
+}
 
 export const formatNodeUrl = (url: string) => {
   if (url.includes('infura.io')) {
@@ -17,31 +34,6 @@ export const formatUrlHost = (url: string | undefined) => {
     return 'Unknown'
   }
   return new URLParse(url).hostname
-}
-
-export const formatWalletAddress = (
-  wallet: Pick<Wallet, 'address' | 'chain'> | undefined
-) => {
-  if (!wallet) {
-    return ''
-  }
-  if (wallet.chain === Chain.NEAR) {
-    if (wallet.address.length === 64) {
-      return (
-        wallet.address.substring(0, 6) + '...' + wallet.address.substring(60)
-      )
-    }
-    return wallet.address
-  }
-  const tail = wallet.address.length - 4
-  return wallet.address.substring(0, 8) + '...' + wallet.address.substring(tail)
-}
-
-export const formatAccountId = (accountId: string | undefined) => {
-  if (!accountId) {
-    return ''
-  }
-  return (accountId || '').split('.')[0]
 }
 
 export function capitalizeFirstLetter(string: string | undefined) {
@@ -63,6 +55,7 @@ export const calcValue = (token: Token, rate = 1) => {
     return 0
   }
   const bal = formatTokenBalance(token.balance, token).toNumber()
+
   const value = bal * token.price * rate
   return Number(value.toFixed(2))
 }
@@ -78,15 +71,19 @@ export const calcTotal = (tokens: Token[], rate = 1) => {
 export const formatBalance = (
   balance: string | undefined,
   decimals: number,
-  tail = 2
+  tail = 3
 ): string => {
   if (!balance) {
     return '0'
   }
-  const bal = /[A-Fa-f]{1}/g.test(balance) ? `0x${balance}` : balance
+
+  const validTail = tail > 10 ? 10 : tail
   const _decimals = typeof decimals === 'number' ? decimals : 24
-  const v = new Decimal(bal).div(10 ** _decimals).toNumber()
-  const result = _.trimEnd(Number(v).toFixed(tail), '0')
+  const v = new Decimal(balance)
+    .div(10 ** _decimals)
+    .toFixed(validTail, Decimal.ROUND_DOWN)
+  const result = _.trimEnd(v, '0')
+
   const resultStr = result.split('.')
   return Number(resultStr[1]) === 0 ? resultStr[0] : result
 }

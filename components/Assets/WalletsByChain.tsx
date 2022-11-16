@@ -1,4 +1,3 @@
-import { useAppSelector } from 'store/hooks'
 import { Text, View } from 'components/Themed'
 import { Image, Pressable, ScrollView, StyleSheet } from 'react-native'
 import icons from 'utils/icons'
@@ -6,14 +5,15 @@ import { useState } from 'react'
 import { Chain, Wallet } from 'types'
 import Box from 'components/common/Box'
 import Colors from 'theme/Colors'
-import { formatWalletAddress } from 'utils/format'
 import Fonts from 'theme/Fonts'
 import Radio from 'components/common/Radio'
 import { KeyAltPlus } from 'iconoir-react-native'
 import useColorScheme from 'hooks/useColorScheme'
 import { i18n } from 'locale'
 import Button from 'components/common/Button'
-import { CHAINS } from 'chain/common/constants'
+import useWallet from 'hooks/useWallet'
+import WalletFactory from 'chain/WalletFactory'
+import Avatar from 'components/common/Avatar'
 
 export default function WalletsByChain({
   onSelect,
@@ -22,10 +22,9 @@ export default function WalletsByChain({
   onSelect: (w: Wallet) => void
   onAdd?: (c: Chain) => void
 }) {
-  const wallet = useAppSelector((state) => state.wallet.current)
-  const wallets = useAppSelector((state) => state.wallet.list)
+  const { wallet, walletList } = useWallet()
 
-  const [selected, setSelected] = useState(wallet?.chain ?? Chain.NEAR)
+  const [selected, setSelected] = useState(wallet?.chain)
   const theme = useColorScheme()
 
   return (
@@ -43,7 +42,7 @@ export default function WalletsByChain({
         gap="medium"
         style={{ paddingTop: 20 }}
       >
-        {CHAINS.map((t) => {
+        {WalletFactory.getChains().map((t) => {
           const isActive = selected === t.chain
           return (
             <Pressable
@@ -64,28 +63,53 @@ export default function WalletsByChain({
         style={styles.walletList}
         contentContainerStyle={styles.walletListContent}
       >
-        {wallets
+        {walletList
           .filter((w) => w.chain === selected)
           .map((w) => {
             return (
               <Pressable
-                key={formatWalletAddress(w)}
+                key={w.address}
                 onPress={() => onSelect(w)}
-                style={{ marginBottom: 10 }}
+                style={{
+                  marginBottom: 10,
+                  flexDirection: 'row',
+                  alignItems: 'center',
+                }}
               >
-                <View style={[styles.walletItem]}>
-                  <Box direction="row" gap="small">
+                <View
+                  style={[
+                    styles.walletItem,
+                    {
+                      backgroundColor: Colors[theme].tabBarBg,
+                      borderLeftColor:
+                        wallet?.address === w.address
+                          ? Colors.main
+                          : Colors[theme].tabBarBg,
+                    },
+                  ]}
+                >
+                  <Box direction="row">
                     {w.isLedger && (
                       <Image
-                        source={icons.LEDGER_WHITE}
-                        style={{ width: 16, height: 16 }}
+                        source={
+                          theme === 'light'
+                            ? icons.LEDGER_DARK
+                            : icons.LEDGER_WHITE
+                        }
+                        style={{ width: 16, height: 16, marginRight: 6 }}
                       />
                     )}
-                    <Text style={styles.walletAddress}>
-                      {formatWalletAddress(w)}
+                    <Text style={styles.walletAddress} numberOfLines={1}>
+                      {WalletFactory.formatAddress(w)}
                     </Text>
                   </Box>
-                  {wallet?.address === w.address && <Radio size={20} checked />}
+
+                  <Avatar
+                    wallet={w}
+                    size={36}
+                    style={{ marginRight: 6 }}
+                    borderColor={Colors[theme].borderColor}
+                  />
                 </View>
               </Pressable>
             )
@@ -95,10 +119,11 @@ export default function WalletsByChain({
             label={i18n.t('Add wallet')}
             size="small"
             style={{ paddingVertical: 8 }}
+            disabled={!selected}
             icon={
               <KeyAltPlus width={24} height={24} color={Colors[theme].link} />
             }
-            onPress={() => onAdd(selected)}
+            onPress={() => selected && onAdd(selected)}
           />
         )}
       </ScrollView>
@@ -122,7 +147,7 @@ const styles = StyleSheet.create({
   },
   activeChain: {
     borderWidth: 2,
-    borderColor: Colors.green,
+    borderColor: Colors.main,
   },
   walletList: {
     flex: 1,
@@ -130,17 +155,21 @@ const styles = StyleSheet.create({
     borderLeftWidth: StyleSheet.hairlineWidth,
   },
   walletItem: {
-    backgroundColor: Colors.green,
-    padding: 10,
+    backgroundColor: Colors.main,
+    paddingVertical: 5,
+    paddingLeft: 10,
+    height: 50,
     borderRadius: 4,
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
+    flex: 1,
+    borderLeftWidth: 6,
   },
   walletAddress: {
-    color: Colors.white,
     fontSize: 18,
     fontFamily: Fonts.variable,
+    maxWidth: 180,
   },
   walletListContent: {
     padding: 20,
@@ -151,7 +180,7 @@ const styles = StyleSheet.create({
     left: 58,
     width: 4,
     height: 20,
-    backgroundColor: Colors.green,
+    backgroundColor: Colors.main,
   },
   chainItem: {
     flexDirection: 'row',

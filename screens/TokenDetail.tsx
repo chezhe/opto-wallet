@@ -16,7 +16,7 @@ import { Portal } from 'react-native-portalize'
 import { Modalize } from 'react-native-modalize'
 import AddressQRModal from 'components/Modals/AddressQRModal'
 import { useRef } from 'react'
-import TxList from 'components/Asset/TxList'
+import TxList from 'components/Assets/TxList'
 
 export default function TokenDetail({
   navigation,
