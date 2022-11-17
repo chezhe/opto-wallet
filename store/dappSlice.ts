@@ -1,8 +1,7 @@
 import { createSlice } from '@reduxjs/toolkit'
-import { Category, Chain, ChainDapps, Project } from 'types'
+import { Chain, ChainDapps, Project } from 'types'
 
 interface DAppSlice {
-  categories: Category[]
   starred: Project[]
   searchHistory: string[]
   NEAR?: ChainDapps
@@ -10,7 +9,6 @@ interface DAppSlice {
 }
 
 const initialState: DAppSlice = {
-  categories: [],
   starred: [],
   searchHistory: [],
 }

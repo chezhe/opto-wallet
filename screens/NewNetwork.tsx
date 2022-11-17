@@ -24,7 +24,7 @@ export default function NewNetwork({
   navigation,
 }: RootStackScreenProps<'NewNetwork'>) {
   const { params } = useRoute()
-  const chain = ((params as any)?.chain as Chain) || Chain.NEAR
+  const chain = ((params as any)?.chain as Chain)!
   const network = (params as any)?.network as CustomNetwork | undefined
   const [name, setName] = useState(network?.name ?? '')
   const [nodeUrl, setNodeUrl] = useState(network?.nodeUrl ?? '')

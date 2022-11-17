@@ -28,11 +28,11 @@ export default function SetupPIN({
   const theme = useColorScheme()
 
   const onConfirmed = async () => {
+    setIsConfirmed(true)
     dispatch({
       type: 'setting/setupPINCode',
       payload: pinCode.join(''),
     })
-    setIsConfirmed(true)
     onNext()
   }
 
@@ -102,7 +102,11 @@ export default function SetupPIN({
         disabled={isConfirmed}
         onInput={onInputChange}
         onDelete={() => {
-          setPINCode(_.dropRight(pinCode))
+          if (isConfirming) {
+            setRepeatPINCode(_.dropRight(repeatPinCode))
+          } else {
+            setPINCode(_.dropRight(pinCode))
+          }
         }}
       />
     </View>

@@ -3,26 +3,42 @@ import SearchInput from 'components/common/SearchInput'
 import { Text, View } from 'components/Themed'
 import useColorScheme from 'hooks/useColorScheme'
 import { i18n } from 'locale'
-import { Trash } from 'iconoir-react-native'
-import { Pressable, StyleSheet } from 'react-native'
+import { GraphUp, Trash } from 'iconoir-react-native'
+import { FlatList, Pressable, StyleSheet } from 'react-native'
 import { useSafeAreaInsets } from 'react-native-safe-area-context'
 import { useAppDispatch, useAppSelector } from 'store/hooks'
 import Colors from 'theme/Colors'
-import { RootStackScreenProps } from 'types'
+import { DApp, Project, RootStackScreenProps } from 'types'
+import { useEffect, useState } from 'react'
+import useWallet from 'hooks/useWallet'
+import ProjectItem from 'components/Project/Item'
 
 export default function SearchDApp({
   navigation,
 }: RootStackScreenProps<'SearchDApp'>) {
   const keywords = useAppSelector((state) => state.dapp.searchHistory ?? [])
 
+  const { walletApi } = useWallet()
+  const [hotSearches, setHotSearches] = useState<DApp[]>([])
   const theme = useColorScheme()
   const insets = useSafeAreaInsets()
   const dispatch = useAppDispatch()
 
+  useEffect(() => {
+    walletApi
+      ?.getHotSearchDApps()
+      .then((dapps) => {
+        setHotSearches(dapps)
+      })
+      .catch((e) => {})
+  }, [walletApi])
+
   const onSearch = (_keyword: string) => {
     const keyword = _keyword.trim()
-
-    if (keyword.startsWith('https://')) {
+    if (keyword.length === 0) {
+      return
+    }
+    if (keyword.startsWith('https://') || keyword.startsWith('http://')) {
       navigation.goBack()
       navigation.navigate('DAppView', {
         url: keyword,
@@ -36,6 +52,12 @@ export default function SearchDApp({
     dispatch({
       type: 'dapp/searched',
       payload: keyword,
+    })
+  }
+
+  const goProject = (project: Project) => {
+    navigation.navigate('DAppView', {
+      project,
     })
   }
 
@@ -110,6 +132,32 @@ export default function SearchDApp({
           )
         })}
       </Box>
+      <Box
+        direction="row"
+        gap="small"
+        pad="medium"
+        style={{ paddingHorizontal: 20 }}
+      >
+        <GraphUp width={24} height={24} color={Colors.gray9} strokeWidth={2} />
+        <Text style={{ fontSize: 18, fontWeight: 'bold' }}>
+          {i18n.t('People are searching')}
+        </Text>
+      </Box>
+      <FlatList
+        data={hotSearches.slice(0, 10)}
+        renderItem={({ item }: { item: Project }) => {
+          return (
+            <ProjectItem
+              project={item}
+              style={styles.item}
+              goProject={goProject}
+            />
+          )
+        }}
+        keyExtractor={(t) => t.title}
+        style={styles.listWrap}
+        contentContainerStyle={styles.content}
+      />
     </View>
   )
 }
@@ -131,5 +179,17 @@ const styles = StyleSheet.create({
     paddingVertical: 5,
     borderRadius: 5,
     marginVertical: 5,
+  },
+  listWrap: {
+    flex: 1,
+  },
+  content: {
+    paddingHorizontal: 20,
+  },
+  item: {
+    width: '100%',
+    borderWidth: StyleSheet.hairlineWidth,
+    borderColor: Colors.gray9,
+    paddingHorizontal: 10,
   },
 })

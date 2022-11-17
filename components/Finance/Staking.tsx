@@ -28,10 +28,9 @@ export default function Staking() {
           setIsLoading(false)
         })
     }
-  }, [walletApi, stakings.length])
+  }, [walletApi, stakings.length, walletApi?.wallet.address])
 
-  const onGoProject = (item: MarketItem) => {
-  }
+  const onGoProject = (item: MarketItem) => {}
 
   return (
     <ScrollView style={{ flex: 1 }} contentContainerStyle={{ padding: 20 }}>

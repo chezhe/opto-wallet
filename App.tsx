@@ -1,6 +1,7 @@
 import 'expo-dev-client'
 import 'fastestsmallesttextencoderdecoder'
 import '@polkadot/wasm-crypto/cjs/initOnlyAsm'
+import 'react-native-url-polyfill/auto'
 import { cryptoWaitReady } from '@polkadot/util-crypto'
 import { SafeAreaProvider } from 'react-native-safe-area-context'
 import { PersistGate } from 'redux-persist/integration/react'
@@ -8,7 +9,6 @@ import { Provider } from 'react-redux'
 import { Host } from 'react-native-portalize'
 import { GestureHandlerRootView } from 'react-native-gesture-handler'
 
-import './shim'
 import './locale'
 import useCachedResources from 'hooks/useCachedResources'
 import Navigation from './navigation'
@@ -17,10 +17,11 @@ import ToastMessage from 'components/common/ToastMessage'
 import { LogBox } from 'react-native'
 import { IconoirProvider } from 'iconoir-react-native'
 import Colors from 'theme/Colors'
+import { polyfillWebCrypto } from 'expo-standard-web-crypto'
 
-LogBox.ignoreAllLogs()
-
+polyfillWebCrypto()
 cryptoWaitReady().catch(console.error)
+LogBox.ignoreAllLogs()
 
 export default function App() {
   const isLoadingComplete = useCachedResources()

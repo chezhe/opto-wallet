@@ -8,7 +8,6 @@ import TokenLogo from 'components/common/TokenLogo'
 import { Text, View } from 'components/Themed'
 import Colors from 'theme/Colors'
 import useColorScheme from 'hooks/useColorScheme'
-import { useAppSelector } from 'store/hooks'
 import { RootStackScreenProps, Token } from 'types'
 import { formatBalance } from 'utils/format'
 import Fonts from 'theme/Fonts'
@@ -17,15 +16,16 @@ import { Modalize } from 'react-native-modalize'
 import AddressQRModal from 'components/Modals/AddressQRModal'
 import { useRef } from 'react'
 import TxList from 'components/Assets/TxList'
+import useWallet from 'hooks/useWallet'
 
 export default function TokenDetail({
   navigation,
-}: RootStackScreenProps<'Token'>) {
+}: RootStackScreenProps<'TokenDetail'>) {
   const { params } = useRoute()
   const token = (params as any).token as Token
 
   const receiveRef = useRef<Modalize>()
-  const wallet = useAppSelector((state) => state.wallet.current)
+  const { wallet } = useWallet()
 
   const theme = useColorScheme()
 

@@ -25,7 +25,7 @@ export default function TransactionList({
         maxHeight: height * 0.4,
         borderWidth: StyleSheet.hairlineWidth,
         padding: 10,
-        borderRadius: 8,
+        width: '100%',
       }}
       renderItem={({ item, index }) => {
         return (
@@ -46,7 +46,7 @@ export default function TransactionList({
               value={item.actions.map((a) => {
                 let methodName = ''
                 if ((a as RawAction).functionCall) {
-                  methodName = (a as RawAction).functionCall.methodName
+                  methodName = (a as RawAction).functionCall?.methodName
                 } else {
                   methodName = (a as any)?.params?.methodName
                 }

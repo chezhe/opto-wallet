@@ -19,6 +19,18 @@ export const walletSlice = createSlice({
       state.list = []
       state.current = undefined
     },
+    setAvatar: (state, action) => {
+      const { avatar, address } = action.payload
+      if (state.current) {
+        state.current.avatar = avatar
+        state.list = state.list.map((t) => {
+          if (address === t.address) {
+            return { ...t, avatar }
+          }
+          return t
+        })
+      }
+    },
     add: (state, action) => {
       if (!action.payload) {
         return

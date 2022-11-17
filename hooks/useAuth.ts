@@ -10,7 +10,7 @@ export default function useAuth() {
   const navigation = useNavigation()
 
   return useCallback(
-    async (onAuthed: () => void, onNoAuth = () => {}) => {
+    async (onAuthed: () => void) => {
       try {
         if (bioAuthEnabled) {
           const result = await LocalAuthentication.authenticateAsync()
@@ -26,7 +26,7 @@ export default function useAuth() {
             onConfirmed: onAuthed,
           })
         } else {
-          onNoAuth()
+          onAuthed()
         }
       } catch (error) {
         Toast.error(error)

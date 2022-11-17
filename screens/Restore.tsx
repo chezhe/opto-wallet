@@ -2,22 +2,18 @@ import { StackActions, useRoute } from '@react-navigation/native'
 import ScreenHeader from 'components/common/ScreenHeader'
 import { View } from 'components/Themed'
 import RestoreForm from 'components/Wallet/RestoreForm'
-import SetupPIN from 'components/Wallet/SetupPIN'
-import { i18n } from 'locale'
 import { useState } from 'react'
-import { useAppDispatch } from 'store/hooks'
-import { Chain, NetworkType, RootStackScreenProps } from 'types'
+import { useAppDispatch, useAppSelector } from 'store/hooks'
+import { Chain, NetworkType, RootStackScreenProps, WalletSource } from 'types'
 import useAuth from 'hooks/useAuth'
 import ToastMessage from 'components/common/ToastMessage'
 import Toast from 'utils/toast'
-import WalletAPI from 'chain/WalletAPI'
 import ScreenLoading from 'components/common/ScreenLoading'
-import { CHAINS } from 'chain/common/constants'
 import { Portal } from 'react-native-portalize'
+import WalletFactory from 'chain/WalletFactory'
 
 enum RESTORE_STEP {
   RESTORE = 'RESTORE',
-  SETUP_PIN = 'SETUP_PIN',
 }
 
 export default function Restore({
@@ -25,27 +21,51 @@ export default function Restore({
 }: RootStackScreenProps<'Restore'>) {
   const [restoring, setRestoring] = useState(false)
   const [step, setStep] = useState(RESTORE_STEP.RESTORE)
-  const [newWallet, setNewWallet] = useState({
-    value: '',
-    type: 0,
-    networkType: NetworkType.MAINNET,
-  })
-
   const { params } = useRoute()
 
   const isNew = (params as any).new as boolean
-  const chain = (params as any).chain as Chain
+  const chain = ((params as any).chain as Chain) || Chain.NEAR
 
   const dispatch = useAppDispatch()
+  const { pincode } = useAppSelector((state) => state.setting)
 
-  // 0 - mnemonic, 1 - private key
   const onConfirmed = async ({
     value,
-    type,
+    source,
     networkType,
   }: {
     value: string
-    type: number
+    source: WalletSource
+    networkType: NetworkType
+  }) => {
+    if (source === WalletSource.MNEMONIC) {
+      const w = await WalletFactory.createWalletFromMnemonic(chain, {
+        networkType,
+        mnemonic: value,
+      })
+      dispatch({
+        type: 'wallet/add',
+        payload: w,
+      })
+    } else {
+      const w = await WalletFactory.createWalletFromPrivateKey(chain, {
+        networkType,
+        privateKey: value,
+      })
+      dispatch({
+        type: 'wallet/add',
+        payload: w,
+      })
+    }
+  }
+
+  const onNext = async ({
+    value,
+    source,
+    networkType,
+  }: {
+    value: string
+    source: WalletSource
     networkType: NetworkType
   }) => {
     if (restoring) {
@@ -53,73 +73,32 @@ export default function Restore({
     }
     setRestoring(true)
     try {
-      if (type === 0) {
-        if (chain) {
-          const wallet = await WalletAPI.createWalletFromMnemonic(
-            chain,
-            value,
-            { networkType }
-          )
-          dispatch({
-            type: 'wallet/add',
-            payload: wallet,
-          })
-        } else {
-          const nWallet = await WalletAPI.createWalletFromMnemonic(
-            Chain.NEAR,
-            value,
-            { networkType }
-          )
-          dispatch({
-            type: 'wallet/add',
-            payload: nWallet,
-          })
-
-          const chains = CHAINS.filter((t) => !t.default).map((t) => t.chain)
-          chains.forEach((chain) => {
-            WalletAPI.createWalletFromMnemonic(chain, value, {
-              networkType,
-            })
-              .then((oWallet) => {
-                dispatch({
-                  type: 'wallet/justAdd',
-                  payload: oWallet,
-                })
-              })
-              .catch(Toast.error)
-          })
-        }
+      if (!pincode) {
+        await onConfirmed({
+          value,
+          source,
+          networkType,
+        })
+        setTimeout(() => {
+          navigation.navigate('SetupPINCode')
+        }, 500)
       } else {
-        if (!isNew) {
-          const wallet = await WalletAPI.createWalletFromPrivateKey(
-            chain,
-            value,
-            {
-              networkType,
-            }
-          )
-          dispatch({
-            type: 'wallet/add',
-            payload: wallet,
-          })
-        }
+        await onConfirmed({
+          value,
+          source,
+          networkType,
+        })
+        navigation.dispatch(StackActions.popToTop())
       }
-
       setRestoring(false)
-      navigation.dispatch(StackActions.popToTop())
-
-      setTimeout(() => {
-        Toast.success(i18n.t('Wallet restored successfully'))
-      }, 1000)
     } catch (error) {
       setRestoring(false)
       Toast.error(error)
+      console.log('Restore error', error)
     }
   }
 
   const auth = useAuth()
-
-  console.log('restoring', restoring)
 
   return (
     <View style={{ flex: 1 }}>
@@ -129,32 +108,9 @@ export default function Restore({
       {step === RESTORE_STEP.RESTORE && (
         <RestoreForm
           chain={chain}
-          onNext={({ value, type, networkType }) => {
-            setNewWallet({ value, type, networkType })
-            auth(
-              () => {
-                onConfirmed({
-                  value,
-                  type,
-                  networkType,
-                })
-              },
-              () => {
-                setStep(RESTORE_STEP.SETUP_PIN)
-              }
-            )
-          }}
+          onNext={onNext}
           isNew={isNew}
           restoring={restoring}
-        />
-      )}
-
-      {step === RESTORE_STEP.SETUP_PIN && (
-        <SetupPIN
-          onNext={() => {
-            onConfirmed(newWallet)
-          }}
-          type="restore"
         />
       )}
       <Portal>

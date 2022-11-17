@@ -25,6 +25,7 @@ import NRAVATAR from 'assets/images/nravatar.png'
 import NEAR_WALLET from 'assets/images/near-wallet.png'
 import LEDGER_DARK from 'assets/images/ledger-dark.png'
 import COIN from 'assets/images/coin.png'
+import DASHBOARD from 'assets/images/dashboard.png'
 
 export default {
   LOGO,
@@ -54,4 +55,5 @@ export default {
   NEAR_WALLET,
   LEDGER_DARK,
   COIN,
+  DASHBOARD,
 }

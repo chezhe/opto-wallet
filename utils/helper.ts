@@ -20,5 +20,5 @@ export const sleep = (ms: number) => {
 }
 
 export const getBuildVersion = () => {
-  return Constants.manifest?.version
+  return Constants.manifest?.version || 'Unknown'
 }

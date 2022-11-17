@@ -18,10 +18,11 @@ import {
 import Colors from 'theme/Colors'
 import Fonts from 'theme/Fonts'
 import { Text } from 'components/Themed'
-import Radio from 'components/common/Radio'
-import { Chain, NetworkType } from 'types'
+import { Chain, NetworkType, WalletSource } from 'types'
 import { capitalizeFirstLetter } from 'utils/format'
 import dictionary from 'utils/words.json'
+import WalletFactory from 'chain/WalletFactory'
+import { KeyAltBack, NumberedListLeft } from 'iconoir-react-native'
 
 export default function RestoreForm({
   isNew,
@@ -32,18 +33,18 @@ export default function RestoreForm({
   isNew: boolean
   onNext: ({
     value,
-    type,
+    source,
     networkType,
   }: {
     value: string
-    type: number
+    source: WalletSource
     networkType: NetworkType
   }) => void
   chain: Chain
   restoring: boolean
 }) {
   const [networkType, setNetworkType] = useState(NetworkType.MAINNET)
-  const [selectedIndex, setSelectedIndex] = useState(0)
+  const [source, setSource] = useState(WalletSource.MNEMONIC)
   const [value, setValue] = useState('')
   const [wordList, setWordList] = useState<string[]>([])
   const [wordListWrapBottom, setWordListWrapBottom] = useState(0)
@@ -51,14 +52,14 @@ export default function RestoreForm({
   const theme = useColorScheme()
 
   const isValid = useMemo(() => {
-    if (selectedIndex === 1) {
-      return true
+    if (source === WalletSource.PRIVATE_KEY) {
+      return !!value
     }
     return bip39.validateMnemonic(value.trim())
-  }, [value, selectedIndex])
+  }, [value, source])
 
   useEffect(() => {
-    if (selectedIndex === 0) {
+    if (source === WalletSource.MNEMONIC) {
       const onHide = () => {
         setWordListWrapBottom(0)
       }
@@ -73,7 +74,7 @@ export default function RestoreForm({
         unsubShow && unsubShow.remove()
       }
     }
-  }, [selectedIndex])
+  }, [source])
 
   const onChangeText = (text: string) => {
     if (restoring) {
@@ -120,7 +121,7 @@ export default function RestoreForm({
           style={{ paddingHorizontal: 20 }}
           full
         >
-          <Heading>(1/2) {i18n.t('Restore')}</Heading>
+          <Heading>{i18n.t('Restore')}</Heading>
         </Box>
 
         <Box
@@ -141,29 +142,58 @@ export default function RestoreForm({
           />
 
           <Box direction="column" align="flex-start" full gap="small">
-            <Text>From</Text>
+            <Text>{i18n.t('Type')}</Text>
 
             <Box direction="column" align="flex-start" full gap="small">
-              {(isNew
-                ? [i18n.t('Mnemonic')]
-                : [i18n.t('Mnemonic'), i18n.t('Private Key')]
-              ).map((t, idx) => {
-                return (
-                  <Pressable
-                    key={t}
-                    onPress={() => !restoring && setSelectedIndex(idx)}
-                  >
-                    <Box gap="small">
-                      <Radio checked={selectedIndex === idx} />
-                      <Text style={styles.title}>{t}</Text>
-                    </Box>
-                  </Pressable>
-                )
-              })}
+              <Pressable
+                onPress={() => !restoring && setSource(WalletSource.MNEMONIC)}
+                style={{
+                  ...styles.source,
+                  backgroundColor:
+                    WalletSource.MNEMONIC === source
+                      ? Colors.main
+                      : Colors[theme].tabBarBg,
+                }}
+              >
+                <Box gap="small">
+                  <NumberedListLeft
+                    width={24}
+                    height={24}
+                    color={
+                      WalletSource.MNEMONIC === source ? '#fff' : Colors.gray
+                    }
+                  />
+                  <Text style={styles.title}>{i18n.t('Mnemonic')}</Text>
+                </Box>
+              </Pressable>
+
+              <Pressable
+                onPress={() =>
+                  !restoring && setSource(WalletSource.PRIVATE_KEY)
+                }
+                style={{
+                  ...styles.source,
+                  backgroundColor:
+                    WalletSource.PRIVATE_KEY === source
+                      ? Colors.main
+                      : Colors[theme].tabBarBg,
+                }}
+              >
+                <Box gap="small">
+                  <KeyAltBack
+                    width={24}
+                    height={24}
+                    color={
+                      WalletSource.PRIVATE_KEY === source ? '#fff' : Colors.gray
+                    }
+                  />
+                  <Text style={styles.title}>{i18n.t('Private Key')}</Text>
+                </Box>
+              </Pressable>
             </Box>
           </Box>
 
-          {chain === Chain.NEAR && (
+          {!WalletFactory.hasSameAddressByNetworkType(chain) && !isNew && (
             <Box direction="column" align="flex-start" full gap="small">
               <Text>Network</Text>
 
@@ -173,13 +203,17 @@ export default function RestoreForm({
                     <Pressable
                       key={t}
                       onPress={() => !restoring && setNetworkType(t)}
+                      style={{
+                        ...styles.source,
+                        backgroundColor:
+                          t === networkType
+                            ? Colors.main
+                            : Colors[theme].tabBarBg,
+                      }}
                     >
-                      <Box gap="small">
-                        <Radio checked={networkType === t} />
-                        <Text style={styles.title}>
-                          {capitalizeFirstLetter(t)}
-                        </Text>
-                      </Box>
+                      <Text style={styles.title}>
+                        {capitalizeFirstLetter(t)}
+                      </Text>
                     </Pressable>
                   )
                 })}
@@ -193,7 +227,7 @@ export default function RestoreForm({
             disabled={!isValid || restoring}
             isLoading={restoring}
             onPress={async () => {
-              onNext({ value: value.trim(), type: selectedIndex, networkType })
+              onNext({ value: value.trim(), source, networkType })
             }}
             style={{ marginTop: 20 }}
           />
@@ -265,5 +299,11 @@ const styles = StyleSheet.create({
   title: {
     fontSize: 16,
     fontFamily: Fonts.heading,
+  },
+  source: {
+    width: '100%',
+    paddingHorizontal: 10,
+    paddingVertical: 10,
+    borderRadius: 4,
   },
 })

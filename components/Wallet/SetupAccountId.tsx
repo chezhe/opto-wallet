@@ -1,13 +1,16 @@
 import { i18n } from 'locale'
 import _ from 'lodash'
 import { useState } from 'react'
-import { ScrollView, StyleSheet, Switch, TouchableOpacity } from 'react-native'
+import {
+  Pressable,
+  ScrollView,
+  StyleSheet,
+  Switch,
+  TouchableOpacity,
+} from 'react-native'
 import Colors from 'theme/Colors'
 import useColorScheme from 'hooks/useColorScheme'
-import { initNear } from 'hooks/useClient'
-import { ButtonType, Chain, NetworkType, NewWalletSetup, Wallet } from 'types'
-import { accountExists } from 'chain/near/utils'
-import { NEAR_NETWORKS } from 'chain/near/constants'
+import { ButtonType, NetworkType, NewWalletSetup } from 'types'
 import Fonts from 'theme/Fonts'
 import Button from 'components/common/Button'
 import { Text, View } from 'components/Themed'
@@ -16,7 +19,8 @@ import AnimatedInput from 'components/common/AnimatedInput'
 import Box from 'components/common/Box'
 import Radio from 'components/common/Radio'
 import Heading from 'components/common/Heading'
-import { getNetwork } from 'chain/common/network'
+import NearWallet from 'chain/NearWallet'
+import { capitalizeFirstLetter } from 'utils/format'
 
 const rules = [
   {
@@ -46,31 +50,21 @@ export default function SetupAccountId({
   }: Pick<NewWalletSetup, 'accountId' | 'networkType'>) => void
 }) {
   const [newAccountId, setNewAccountId] = useState('')
-  const [newNetworkType, setNewNetworkType] = useState(NetworkType.MAINNET)
+  const [networkType, setNetworkType] = useState(NetworkType.MAINNET)
   const [errorMsg, setErrorMsg] = useState('')
   const [accountIdFocused, setAccountIdFocused] = useState(false)
   const [isImplicit, setIsImplicit] = useState(false)
   const theme = useColorScheme()
-  const network = NEAR_NETWORKS[newNetworkType]
+  const network = NearWallet.meta.defaultNetworks[networkType]
 
   const checkAvailability = _.throttle(
     async (newNetworkType: NetworkType, newAccountId: string) => {
       try {
-        const fakeWallet: Wallet = {
-          chain: Chain.NEAR,
-          networkType: newNetworkType,
-          address: newAccountId + NEAR_NETWORKS[newNetworkType].suffix,
-          publicKey: '',
-        }
-        const network = getNetwork(fakeWallet)
-        if (!network) {
-          throw new Error('Invalid network')
-        }
-        const near = await initNear(network)
-        const isExist = await accountExists(
-          near,
-          newAccountId + NEAR_NETWORKS[newNetworkType].suffix
+        const isExist = await NearWallet.existAccountId(
+          newAccountId + network?.suffix,
+          newNetworkType
         )
+
         if (isExist) {
           setErrorMsg(i18n.t('Account already exists'))
         } else {
@@ -84,22 +78,26 @@ export default function SetupAccountId({
   )
 
   const networkSelector = (
-    <Box direction="column" align="flex-start" gap="small">
+    <Box
+      direction="column"
+      align="flex-start"
+      gap="small"
+      full
+      style={{ marginTop: 10 }}
+    >
       {Object.values(NetworkType).map((t) => {
         return (
-          <TouchableOpacity
+          <Pressable
             key={t}
-            activeOpacity={0.7}
-            onPress={() => {
-              setNewNetworkType(t)
-              checkAvailability(t, newAccountId)
+            onPress={() => setNetworkType(t)}
+            style={{
+              ...styles.source,
+              backgroundColor:
+                t === networkType ? Colors.main : Colors[theme].tabBarBg,
             }}
           >
-            <View style={styles.radio}>
-              <Radio checked={t === newNetworkType} />
-              <Text style={styles.radioText}>{t}</Text>
-            </View>
-          </TouchableOpacity>
+            <Text style={styles.title}>{capitalizeFirstLetter(t)}</Text>
+          </Pressable>
         )
       })}
     </Box>
@@ -116,16 +114,19 @@ export default function SetupAccountId({
       >
         <Text>Implicit</Text>
         <Switch
-          trackColor={{ false: '#767577', true: '#81b0ff' }}
-          thumbColor={isImplicit ? '#f5dd4b' : '#f4f3f4'}
+          trackColor={{ false: '#767577', true: Colors.main }}
+          thumbColor={isImplicit ? '#f4f3f4' : '#f4f3f4'}
           ios_backgroundColor="#3e3e3e"
-          onValueChange={() => setIsImplicit(!isImplicit)}
+          onValueChange={() => {
+            setIsImplicit(!isImplicit)
+            if (isImplicit) {
+              setNetworkType(NetworkType.MAINNET)
+            }
+          }}
           value={isImplicit}
         />
       </Box>
-      {isImplicit ? (
-        networkSelector
-      ) : (
+      {!isImplicit && (
         <Box direction="column" align="flex-start" gap="small">
           <Box
             full
@@ -139,28 +140,27 @@ export default function SetupAccountId({
                 : Colors[theme].borderColor,
             }}
           >
-            {!!newAccountId && !newAccountId.includes('.') && (
-              <Text
-                style={[
-                  styles.suffix,
-                  {
-                    color: Colors[theme].text,
-                    left: newAccountId.length * 12,
-                  },
-                ]}
-              >{`${network.suffix}`}</Text>
-            )}
+            <Text
+              style={[
+                styles.suffix,
+                {
+                  color: Colors[theme].text,
+                  left: newAccountId.length * 12,
+                  opacity:
+                    !!newAccountId && !newAccountId.includes('.') ? 1 : 0,
+                },
+              ]}
+            >{`${network?.suffix}`}</Text>
 
             <AnimatedInput
               autoCapitalize="none"
-              style={{}}
               value={newAccountId}
               placeholder={i18n.t('Account ID')}
               onChangeText={(text) => {
-                setNewAccountId(text.trim().toLowerCase())
+                setNewAccountId(text)
                 if (text.match(/[a-z0-9_-]{2,64}/)) {
                   setErrorMsg('')
-                  checkAvailability(newNetworkType, text)
+                  checkAvailability(networkType, text)
                 } else {
                   setErrorMsg(i18n.t('Invalid Account ID'))
                 }
@@ -187,8 +187,8 @@ export default function SetupAccountId({
         onPress={() => {
           if (isImplicit || !errorMsg) {
             onNext({
-              accountId: isImplicit ? '' : newAccountId + network.suffix,
-              networkType: newNetworkType,
+              accountId: isImplicit ? '' : newAccountId + network?.suffix,
+              networkType: networkType,
             })
           }
         }}
@@ -224,7 +224,6 @@ const styles = StyleSheet.create({
   },
   errWrap: {
     height: 20,
-    marginVertical: 10,
   },
   tip: {
     marginBottom: 10,
@@ -237,5 +236,15 @@ const styles = StyleSheet.create({
     fontSize: 20,
     fontFamily: Fonts.variable,
     marginLeft: 8,
+  },
+  title: {
+    fontSize: 16,
+    fontFamily: Fonts.heading,
+  },
+  source: {
+    width: '100%',
+    paddingHorizontal: 10,
+    paddingVertical: 10,
+    borderRadius: 4,
   },
 })

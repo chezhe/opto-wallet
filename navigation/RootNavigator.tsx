@@ -17,6 +17,7 @@ import Colors from 'theme/Colors'
 import useColorScheme from 'hooks/useColorScheme'
 import NotFoundScreen from 'screens/NotFoundScreen'
 import Home from 'screens/Home'
+import Explore from 'screens/Explore'
 import Settings from 'screens/Settings'
 import TokenDetail from 'screens/TokenDetail'
 import { RootTabParamList, RootTabScreenProps, RootStackParamList } from 'types'
@@ -240,11 +241,6 @@ export default function RootNavigator() {
           options={{ header: () => null }}
         />
         <Stack.Screen
-          name="LedgerDevice"
-          component={LedgerDevice}
-          options={{ header: () => null }}
-        />
-        <Stack.Screen
           name="Networks"
           component={Networks}
           options={{ header: () => null }}
@@ -311,7 +307,8 @@ const Tabs = AnimatedTabBarNavigator<RootTabParamList>()
 
 function BottomTabNavigator() {
   const theme = useColorScheme()
-  
+  const { isExplorerEnabled } = useAppSelector((state) => state.setting)
+
   return (
     <Tabs.Navigator
       initialRouteName="Home"
@@ -385,6 +382,30 @@ function BottomTabNavigator() {
           }
         }}
       />
+      {isExplorerEnabled && (
+        <Tabs.Screen
+          name="Explore"
+          component={Explore}
+          options={({ navigation }: RootTabScreenProps<'Explore'>) => ({
+            tabBarIcon: ({
+              color,
+              focused,
+            }: {
+              color: string
+              focused: boolean
+            }) => (
+              <Planet
+                width={30}
+                height={30}
+                color={focused ? color : Colors[theme].text}
+                strokeWidth={focused ? 2 : 1}
+              />
+            ),
+            headerShown: false,
+            title: i18n.t('Explore'),
+          })}
+        />
+      )}
       <Tabs.Screen
         name="Settings"
         component={Settings}

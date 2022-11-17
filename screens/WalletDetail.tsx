@@ -1,25 +1,26 @@
 import { StackActions, useRoute } from '@react-navigation/native'
 import Address from 'components/common/Address'
 import Box from 'components/common/Box'
-import Heading from 'components/common/Heading'
 import ScreenHeader from 'components/common/ScreenHeader'
 import { View } from 'components/Themed'
-import useColorScheme from 'hooks/useColorScheme'
 import { i18n } from 'locale'
 import Colors from 'theme/Colors'
 import { StyleSheet } from 'react-native'
 import Styles from 'theme/Styles'
-import { RootStackScreenProps, SettingItem, Wallet } from 'types'
+import { Chain, RootStackScreenProps, SettingItem, Wallet } from 'types'
 import SettingBlock from 'components/Settings/SettingBlock'
-import { Archive, Trash } from 'iconoir-react-native'
+import { Archive, KeyAlt, Trash, UserCircleAlt } from 'iconoir-react-native'
 import { useRef } from 'react'
 import { Portal } from 'react-native-portalize'
 import { Modalize } from 'react-native-modalize'
 import ConfirmModal from 'components/Modals/ConfirmModal'
-import WalletAPI from 'chain/WalletAPI'
 import { useAppDispatch, useAppSelector } from 'store/hooks'
 import useAuth from 'hooks/useAuth'
 import Toast from 'utils/toast'
+import BaseWallet from 'chain/BaseWallet'
+import SetAvatarModal from 'components/Modals/SetAvatarModal'
+import FastImage from 'react-native-fast-image'
+import icons from 'utils/icons'
 
 export default function WalletDetail({
   navigation,
@@ -27,14 +28,15 @@ export default function WalletDetail({
   const { params } = useRoute()
   const wallet = (params as any)?.wallet as Wallet
   const wallets = useAppSelector((state) => state.wallet.list)
+  const setAvatarRef = useRef<Modalize>()
   const confirmDeleteRef = useRef<Modalize>()
   const exportKeyRef = useRef<Modalize>()
 
-  const theme = useColorScheme()
   const dispatch = useAppDispatch()
 
   const onConfirmDelete = async () => {
-    await WalletAPI.deleteWallet(wallet)
+    await BaseWallet.deleteWallet(wallet)
+
     dispatch({
       type: 'wallet/remove',
       payload: wallet,
@@ -59,7 +61,7 @@ export default function WalletDetail({
       navigation.goBack()
     }
     setTimeout(() => {
-      Toast.success('Wallet deleted')
+      Toast.success(i18n.t('Wallet deleted'))
     }, 1000)
   }
 
@@ -84,17 +86,33 @@ export default function WalletDetail({
   ]
 
   if (!wallet.isLedger) {
-    actions = [
-      {
-        icon: Archive,
-        title: 'Export',
-        value: '',
-        onPress: () => {
-          exportKeyRef?.current?.open()
-        },
+    actions.splice(1, 0, {
+      icon: Archive,
+      title: 'Export',
+      value: '',
+      onPress: () => {
+        exportKeyRef?.current?.open()
       },
-      ...actions,
-    ]
+    })
+  }
+
+  if (wallet.chain === Chain.NEAR) {
+    actions.splice(0, 0, {
+      icon: UserCircleAlt,
+      title: 'Nravatar',
+      value: '',
+      onPress: async () => {
+        setAvatarRef?.current?.open()
+      },
+    })
+    actions.splice(1, 0, {
+      icon: KeyAlt,
+      title: 'Authorized Apps',
+      value: '',
+      onPress: async () => {
+        navigation.navigate('AuthorizedApps')
+      },
+    })
   }
 
   return (
@@ -103,18 +121,22 @@ export default function WalletDetail({
       <View style={Styles.page}>
         <Box
           direction="column"
-          align="flex-start"
-          backgroundColor={Colors[theme].cardBackground}
-          pad="medium"
-          gap="small"
-          style={{ borderRadius: 4, marginBottom: 20 }}
+          align="center"
+          justify="center"
+          gap="medium"
+          style={{ paddingBottom: 30 }}
         >
-          <Heading level={3}>{i18n.t('Wallet Address')}</Heading>
+          {wallet.chain === Chain.NEAR && (
+            <FastImage
+              source={wallet?.avatar ? { uri: wallet.avatar } : icons.NRAVATAR}
+              style={{ ...styles.avatar, borderColor: Colors.white }}
+            />
+          )}
           <Address
             wallet={wallet}
             ellipsis={false}
-            fontSize={16}
-            numberOfLines={2}
+            fontSize={18}
+            numberOfLines={3}
           />
         </Box>
 
@@ -157,6 +179,19 @@ export default function WalletDetail({
             }}
           />
         </Modalize>
+        <Modalize
+          ref={setAvatarRef}
+          adjustToContentHeight
+          closeOnOverlayTap
+          withHandle={false}
+        >
+          <SetAvatarModal
+            onClose={() => setAvatarRef?.current?.close()}
+            onConfirm={(avatar) => {
+              navigation.goBack()
+            }}
+          />
+        </Modalize>
       </Portal>
     </View>
   )
@@ -165,5 +200,11 @@ export default function WalletDetail({
 const styles = StyleSheet.create({
   address: {
     fontSize: 16,
+  },
+  avatar: {
+    width: 160,
+    height: 160,
+    borderRadius: 80,
+    borderWidth: StyleSheet.hairlineWidth,
   },
 })

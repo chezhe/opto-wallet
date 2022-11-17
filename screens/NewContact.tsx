@@ -24,8 +24,7 @@ import { useAppDispatch, useAppSelector } from 'store/hooks'
 import Colors from 'theme/Colors'
 import { Chain, Contact, RootStackScreenProps } from 'types'
 import Toast from 'utils/toast'
-import { getChainFromAddress } from 'chain/common'
-import { CHAINS } from 'chain/common/constants'
+import WalletFactory from 'chain/WalletFactory'
 
 export default function NewContact({
   navigation,
@@ -34,7 +33,7 @@ export default function NewContact({
   const contact = (params as any)?.contact as Contact | undefined
   const [name, setName] = useState(contact?.alias ?? '')
   const [address, setAddress] = useState(contact?.address ?? '')
-  const [chain, setChain] = useState(contact?.chain ?? Chain.NEAR)
+  const [chain, setChain] = useState(contact?.chain || Chain.NEAR)
 
   const [nameFocus, setNameFocus] = useState(false)
   const [addressFocus, setAddressFocus] = useState(false)
@@ -64,10 +63,14 @@ export default function NewContact({
       if (!isEdit && contacts.some((t) => t.address === address)) {
         throw new Error(i18n.t('Contact already exists'))
       }
-      const newContact = {
+      if (!chain) {
+        throw new Error(i18n.t('Invalid chain'))
+      }
+      const newContact: Contact = {
         alias: _name,
         address,
         chain,
+        networkType: WalletFactory.getNetworkTypeByAddress(address, chain),
       }
       if (isEdit) {
         dispatch({
@@ -143,11 +146,7 @@ export default function NewContact({
               placeholder={i18n.t('Address')}
               autoCapitalize="none"
               value={address}
-              onChangeText={async (_text) => {
-                const _chain = await getChainFromAddress(_text.trim())
-                setAddress(_text.trim())
-                setChain(_chain ?? chain)
-              }}
+              onChangeText={setAddress}
               onFocus={() => setAddressFocus(true)}
               onBlur={() => setAddressFocus(false)}
               placeholderTextColor={Colors.gray9}
@@ -169,17 +168,22 @@ export default function NewContact({
 
           <Box direction="column" align="flex-start" gap="medium" full>
             <Text>Chain</Text>
-            <Box direction="column" gap="medium">
-              {CHAINS.map((t) => {
+            <Box direction="column" gap="small" full>
+              {WalletFactory.getChains().map((t) => {
                 const isActive = chain === t.chain
                 return (
                   <Pressable
                     key={t.chain}
-                    style={styles.chainItem}
+                    style={{
+                      ...styles.chainItem,
+                      backgroundColor: isActive
+                        ? Colors.main
+                        : Colors[theme].tabBarBg,
+                    }}
                     onPress={() => setChain(t.chain)}
                   >
-                    <Radio checked={isActive} />
                     <Image source={t.icon} style={styles.chain} />
+                    <Text style={styles.chainName}>{t.chain}</Text>
                   </Pressable>
                 )
               })}
@@ -238,7 +242,10 @@ const styles = StyleSheet.create({
   chainItem: {
     flexDirection: 'row',
     alignItems: 'center',
-    justifyContent: 'flex-start',
+    width: '100%',
+    paddingHorizontal: 10,
+    paddingVertical: 10,
+    borderRadius: 4,
   },
   chain: {
     width: 30,
@@ -246,6 +253,9 @@ const styles = StyleSheet.create({
     borderRadius: 15,
     borderWidth: StyleSheet.hairlineWidth,
     borderColor: '#999',
-    marginLeft: 20,
+  },
+  chainName: {
+    fontSize: 20,
+    marginLeft: 10,
   },
 })

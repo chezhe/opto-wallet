@@ -12,7 +12,6 @@ interface SettingSlice {
   contacts: Contact[]
   pincode: string
   isExplorerEnabled: boolean
-  isNFTEnabled: boolean
   isLabEnabled: boolean
   networks: CustomNetwork[]
   tour: {
@@ -35,7 +34,6 @@ const initialState: SettingSlice = {
   contacts: [],
   pincode: '',
   isExplorerEnabled: Platform.OS === 'android',
-  isNFTEnabled: Platform.OS === 'android',
   isLabEnabled: false,
   networks: [],
   tour: {
@@ -143,13 +141,9 @@ export const settingSlice = createSlice({
       state.bioAuthEnabled = action.payload
     },
     updateConfigure: (state, action) => {
-      const { isExplorerEnabled, isNFTEnabled, links, isLabEnabled } =
-        action.payload
+      const { isExplorerEnabled, links, isLabEnabled } = action.payload
       if (!state.isExplorerEnabled && isExplorerEnabled) {
         state.isExplorerEnabled = isExplorerEnabled
-      }
-      if (!state.isNFTEnabled && isNFTEnabled) {
-        state.isNFTEnabled = isNFTEnabled
       }
       if (typeof isLabEnabled === 'boolean') {
         state.isLabEnabled = isLabEnabled

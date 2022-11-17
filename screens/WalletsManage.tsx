@@ -5,7 +5,7 @@ import { View } from 'components/Themed'
 import { Chain, RootStackScreenProps } from 'types'
 import Fonts from 'theme/Fonts'
 import WalletsByChain from 'components/Assets/WalletsByChain'
-import { LogOut, OffRounded, Trash } from 'iconoir-react-native'
+import { KeyAltRemove } from 'iconoir-react-native'
 import Colors from 'theme/Colors'
 import { Modalize } from 'react-native-modalize'
 import { useRef } from 'react'
@@ -33,23 +33,24 @@ export default function WalletsManage({
     navigation.popToTop()
     navigation.navigate('Start', { new: true })
   }
+
   return (
     <View style={styles.container}>
       <ScreenHeader
         title={i18n.t('Wallets')}
-        // rightEle={
-        //   <Pressable
-        //     hitSlop={15}
-        //     onPress={() => confirmDeleteRef.current?.open()}
-        //   >
-        //     <OffRounded
-        //       width={24}
-        //       height={24}
-        //       color={Colors.link}
-        //       strokeWidth={2}
-        //     />
-        //   </Pressable>
-        // }
+        rightEle={
+          <Pressable
+            hitSlop={15}
+            onPress={() => confirmDeleteRef.current?.open()}
+          >
+            <KeyAltRemove
+              width={24}
+              height={24}
+              color={Colors.link}
+              strokeWidth={2}
+            />
+          </Pressable>
+        }
       />
       <WalletsByChain
         onSelect={(w) => navigation.navigate('WalletDetail', { wallet: w })}
@@ -60,7 +61,7 @@ export default function WalletsManage({
           })
         }
       />
-      {/* <Portal>
+      <Portal>
         <Modalize
           ref={confirmDeleteRef}
           adjustToContentHeight
@@ -68,8 +69,8 @@ export default function WalletsManage({
           withHandle={false}
         >
           <ConfirmModal
-            title="Delete"
-            icon={<Trash width={40} height={40} color={Colors.black} />}
+            title="Logout"
+            icon={<KeyAltRemove width={40} height={40} color={Colors.black} />}
             iconWrapColor={Colors.red}
             subtitle="Make sure you have a backup of your private key before you delete this wallet"
             onCancel={() => confirmDeleteRef?.current?.close()}
@@ -79,7 +80,7 @@ export default function WalletsManage({
             }}
           />
         </Modalize>
-      </Portal> */}
+      </Portal>
     </View>
   )
 }

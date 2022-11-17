@@ -1,5 +1,4 @@
 import { request } from 'graphql-request'
-import { Chain } from 'types'
 import API from 'configure/api'
 import { getBuildVersion } from './helper'
 import { DEFAULT_CURRENCY_RATE } from 'configure/setting'
@@ -13,12 +12,11 @@ export const post = async (url: string, json: object) => {
       headers: {
         Accept: 'application/json',
         'Content-Type': 'application/json',
+        'app-version': getBuildVersion(),
       },
     })
     const responseJson = await response.json()
-
     console.log('✅POST - ', url, json)
-
     return responseJson
   } catch (error) {
     console.log('❌POST - ', url, json)
@@ -32,11 +30,14 @@ export const graphFetcher = (host: string, query: string, headers: any) => {
 
 export const fetcher = async (url: string, headers = {}) => {
   const controller = new AbortController()
-  const id = setTimeout(() => controller.abort(), 30000)
+  const id = setTimeout(() => controller.abort(), 60000)
   try {
     const response = await fetch(url, {
       signal: controller.signal,
-      headers,
+      headers: {
+        ...headers,
+        'app-version': getBuildVersion(),
+      },
     })
     clearTimeout(id)
     console.log('✅GET - ', url)
@@ -48,27 +49,11 @@ export const fetcher = async (url: string, headers = {}) => {
 }
 
 export const fetchFixer = async () => {
-  return fetcher(`${API.indexer}/api/fixer`)
+  return fetcher(`${API.host}/api/fixer`)
     .then((data) => data.rates)
     .catch(() => DEFAULT_CURRENCY_RATE)
 }
 
-export const fetchDApp = async (chain: Chain) => {
-  return fetcher(`${API.indexer}/api/dapps?chain=${chain}`).then((data) => {
-    return data
-  })
-}
-
 export const fetchConfigure = async () => {
-  return await fetcher(
-    `${API.indexer}/api/configure?version=${getBuildVersion()}`
-  )
-}
-
-export const searchDapps = (chain: Chain, keyword: string) => {
-  return fetcher(
-    `${API.indexer}/api/dapps/search?chain=${chain}&keyword=${keyword}`
-  )
-    .then((data) => data)
-    .catch(() => [])
+  return await fetcher(`${API.host}/api/configure`)
 }

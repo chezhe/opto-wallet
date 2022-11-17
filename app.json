@@ -1,34 +1,88 @@
 {
   "expo": {
-    "name": "opto-wallet",
-    "slug": "opto-wallet",
-    "version": "1.0.0",
+    "name": "Opto Wallet",
+    "slug": "opto",
+    "version": "1.3.3",
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",
-    "scheme": "myapp",
+    "scheme": "opto",
     "userInterfaceStyle": "automatic",
     "splash": {
       "image": "./assets/images/splash.png",
-      "resizeMode": "contain",
+      "resizeMode": "cover",
       "backgroundColor": "#ffffff"
     },
     "updates": {
       "fallbackToCacheTimeout": 0
     },
-    "assetBundlePatterns": [
-      "**/*"
-    ],
+    "assetBundlePatterns": ["**/*"],
+    "hooks": {
+      "postPublish": [
+        {
+          "file": "sentry-expo/upload-sourcemaps",
+          "config": {
+            "organization": "xoth",
+            "project": "opto",
+            "authToken": "[sentry auth token]"
+          }
+        }
+      ]
+    },
     "ios": {
-      "supportsTablet": true
+      "bundleIdentifier": "app.opto.wallet",
+      "googleServicesFile": "./GoogleService-Info.plist",
+      "supportsTablet": true,
+      "buildNumber": "151",
+      "appStoreUrl": "https://apps.apple.com/us/app/opto-wallet/id6443854537",
+      "infoPlist": {
+        "NSFaceIDUsageDescription": "We need Face ID to make sure you are the owner of the wallet",
+        "NSCameraUsageDescription": "We need camera to scan QR code to transfer",
+        "NSBluetoothAlwaysUsageDescription": "We need use bluetooth to connect Ledger device"
+      },
+      "config": {
+        "usesNonExemptEncryption": false
+      }
     },
     "android": {
+      "package": "app.opto.wallet",
+      "googleServicesFile": "./google-services.json",
       "adaptiveIcon": {
         "foregroundImage": "./assets/images/adaptive-icon.png",
         "backgroundColor": "#ffffff"
-      }
+      },
+      "versionCode": 151,
+      "permissions": [
+        "CAMERA",
+        "READ_EXTERNAL_STORAGE",
+        "WRITE_EXTERNAL_STORAGE",
+        "RECEIVE_BOOT_COMPLETED",
+        "SCHEDULE_EXACT_ALARM",
+        "BLUETOOTH_SCAN",
+        "BLUETOOTH_CONNECT",
+        "ACCESS_FINE_LOCATION",
+        "BLUETOOTH",
+        "BLUETOOTH_ADMIN"
+      ]
     },
     "web": {
       "favicon": "./assets/images/favicon.png"
+    },
+    "plugins": [
+      "sentry-expo",
+      [
+        "@config-plugins/react-native-ble-plx",
+        {
+          "isBackgroundEnabled": true,
+          "modes": ["peripheral", "central"],
+          "bluetoothAlwaysPermission": "Allow $(PRODUCT_NAME) to use bluetooth to connect Ledger",
+          "bluetoothPeripheralPermission": "Allow $(PRODUCT_NAME) to use bluetooth to connect Ledger"
+        }
+      ]
+    ],
+    "extra": {
+      "eas": {
+        "projectId": "[projectId]"
+      }
     }
   }
 }

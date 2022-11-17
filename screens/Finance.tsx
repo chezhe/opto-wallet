@@ -36,7 +36,7 @@ export default function Finance() {
   })
   const insets = useSafeAreaInsets()
   const theme = useColorScheme()
-  
+
   const renderTabBar = (
     props: SceneRendererProps & { navigationState: NavigationState<Route> }
   ) => {

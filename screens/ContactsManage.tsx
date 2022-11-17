@@ -43,10 +43,7 @@ export default function ContactsManage({
         }
       />
       {contacts.length === 0 ? (
-        <Empty
-          title="No contacts yet"
-          style={{ marginTop: 0, marginBottom: 100 }}
-        />
+        <Empty title="No contacts yet" style={{ marginTop: 100 }} />
       ) : (
         <FlatList
           data={contacts}

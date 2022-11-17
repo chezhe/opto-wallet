@@ -6,6 +6,7 @@ import {
   StyleSheet,
   View as NativeView,
   Platform,
+  Linking,
 } from 'react-native'
 import * as Sharing from 'expo-sharing'
 import { useEffect, useRef, useState } from 'react'
@@ -13,22 +14,18 @@ import { i18n } from 'locale'
 import QRCode from 'react-native-qrcode-svg'
 import icons from 'utils/icons'
 import { View, Text } from 'components/Themed'
-import { NEAR_NETWORKS, LINKDROP_GAS } from 'chain/near/constants'
 import { useAppSelector } from 'store/hooks'
 import { Chain, CreateAccount, NetworkType, NewWalletSetup } from 'types'
 import useColorScheme from 'hooks/useColorScheme'
 import Colors from 'theme/Colors'
 import Fonts from 'theme/Fonts'
 import Toast from 'utils/toast'
-import { parseNearMnemonic } from 'chain/near/utils'
 import Heading from 'components/common/Heading'
-import WalletAPI from 'chain/WalletAPI'
-import { formatWalletAddress } from 'utils/format'
 import ScreenLoading from 'components/common/ScreenLoading'
 import { captureRef } from 'react-native-view-shot'
 import Button from 'components/common/Button'
-import { parseNearAmount } from 'near-api-js/lib/utils/format'
-import { fetchNearAccountIds } from 'chain/near/token'
+import NearWallet, { fetchNearAccountIds } from 'chain/NearWallet'
+import WalletFactory from 'chain/WalletFactory'
 
 export default function FundAccount({
   newWallet,
@@ -44,11 +41,12 @@ export default function FundAccount({
       (w) => w.chain === Chain.NEAR && w.networkType === NetworkType.MAINNET
     )
   })
+  const { links } = useAppSelector((state) => state.setting)
   const qrcodeRef = useRef<NativeView>(null)
   const theme = useColorScheme()
 
   useEffect(() => {
-    parseNearMnemonic(newWallet.mnemonic).then(({ publicKey, secretKey }) => {
+    NearWallet.parseMnemonic(newWallet.mnemonic).then(({ publicKey }) => {
       setQrCodeValue({
         publicKey,
         accountId: newWallet.accountId,
@@ -92,24 +90,9 @@ export default function FundAccount({
       }
 
       Toast.close()
-      await WalletAPI.signAndSendTransaction({
-        wallet: wallets.find((t) => t.address === creatorAddress)!,
-        receiverId: 'near',
-        actions: [
-          {
-            type: 'FunctionCall',
-            params: {
-              methodName: 'create_account',
-              args: {
-                new_account_id: newWallet.accountId,
-                new_public_key: qrCodeValue.publicKey.replace(/^ed25519:/, ''),
-              },
-              gas: LINKDROP_GAS,
-              deposit: parseNearAmount('0.1')!,
-            },
-          },
-        ],
-      })
+      const w = wallets.find((t) => t.address === creatorAddress)!
+      const walletApi = new NearWallet(w)
+      await walletApi.createAccount(qrCodeValue)
 
       setIsCreating(false)
 
@@ -128,7 +111,7 @@ export default function FundAccount({
 
       const qrcode = await captureRef(qrcodeRef, {
         result: 'tmpfile',
-        height: pixels,
+        height: pixels * 1.2,
         width: pixels,
         quality: 1,
         format: 'png',
@@ -158,7 +141,7 @@ export default function FundAccount({
       <View style={{ marginBottom: 20 }}>
         <Text style={[styles.tip, { fontWeight: 'bold' }]}>
           {i18n.t('Please fund at least min Ⓝ to active your new account', {
-            min: NEAR_NETWORKS[NetworkType.MAINNET].MIN_BALANCE_TO_CREATE,
+            min: '0.1',
           })}
         </Text>
       </View>
@@ -185,7 +168,7 @@ export default function FundAccount({
                     <Text
                       style={[styles.itemText, { color: Colors[theme].link }]}
                     >
-                      {formatWalletAddress(_w)}
+                      {WalletFactory.formatAddress(_w)}
                     </Text>
                   </View>
                 </Pressable>
@@ -214,28 +197,40 @@ export default function FundAccount({
         <NativeView style={styles.qrcodeWrap} ref={qrcodeRef}>
           <QRCode
             size={260}
-            logo={icons.ABOUT}
+            logo={icons.LOGO}
             logoBackgroundColor="white"
             logoMargin={5}
             logoSize={40}
             value={JSON.stringify(qrCodeValue)}
+            logoBorderRadius={10}
           />
+          <Text style={styles.forme}>
+            {i18n.t('Create NEAR account for me')}
+          </Text>
+          <Text style={styles.newAccountId}>{qrCodeValue?.accountId}</Text>
         </NativeView>
         <Text
           style={[
             styles.tip,
-            { marginTop: 10, fontSize: 14, color: Colors.gray },
+            { marginTop: 10, fontSize: 16, color: Colors.gray },
           ]}
         >
-          {i18n.t('Share to friends to activate your new account')}
+          {i18n.t(
+            'Share the QR code with friends to activate your new account'
+          )}
         </Text>
         <Button
           label={i18n.t('Share')}
           onPress={onShare}
           primary
-          size="small"
           style={{ width: 200, marginTop: 10 }}
         />
+        <Text
+          style={{ color: Colors.link, fontSize: 16, marginTop: 10 }}
+          onPress={() => Linking.openURL(links.twitter)}
+        >
+          Need help? Contact with @optowallet
+        </Text>
       </View>
 
       <ScreenLoading visible={isCreating} />
@@ -278,5 +273,18 @@ const styles = StyleSheet.create({
     fontSize: 20,
     fontFamily: Fonts.variable,
     marginLeft: 10,
+  },
+  newAccountId: {
+    fontSize: 20,
+    fontFamily: Fonts.variable,
+    textAlign: 'center',
+    marginTop: 4,
+    color: Colors.main,
+  },
+  forme: {
+    fontSize: 16,
+    textAlign: 'center',
+    marginTop: 8,
+    color: Colors.black,
   },
 })

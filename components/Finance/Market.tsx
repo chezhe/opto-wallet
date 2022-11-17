@@ -30,9 +30,7 @@ export default function Market() {
     }
   }, [walletApi, sections.length])
 
-  const onGoProject = (item: MarketItem) => {
-  
-  }
+  const onGoProject = (item: MarketItem) => {}
 
   return (
     <ScrollView style={{ flex: 1 }} contentContainerStyle={{ padding: 20 }}>

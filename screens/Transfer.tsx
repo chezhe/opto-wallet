@@ -22,6 +22,7 @@ import Toast from 'utils/toast'
 import { i18n } from 'locale'
 import {
   ButtonType,
+  Chain,
   Contact,
   Currency,
   RootStackScreenProps,
@@ -35,20 +36,16 @@ import AnimatedInput from 'components/common/AnimatedInput'
 import ContactItem from 'components/Settings/ContactItem'
 import { Modalize } from 'react-native-modalize'
 import TxPreviewModal from 'components/Modals/TxPreviewModal'
-import WalletAPI from 'chain/WalletAPI'
 import useAuth from 'hooks/useAuth'
 import { CURRENCY_SYMBOL, DEFAULT_CURRENCY_RATE } from 'configure/setting'
-import {
-  filterWalletToken,
-  isValidAmount,
-  isValidReceiverAddress,
-  sortWalletTokens,
-} from 'chain/common'
+import { isValidAmount, sortWalletTokens } from 'chain/common'
+import useWallet from 'hooks/useWallet'
+import Avatar from 'components/common/Avatar'
 
 export default function Transfer({
   navigation,
 }: RootStackScreenProps<'Transfer'>) {
-  const wallet = useAppSelector((state) => state.wallet.current)
+  const { wallet, walletApi } = useWallet()
   const currencyRates = useAppSelector(
     (state) => state.setting.currencyRates || DEFAULT_CURRENCY_RATE
   )
@@ -58,7 +55,9 @@ export default function Transfer({
 
   const tokens = useAppSelector((state) => {
     return sortWalletTokens(
-      state.asset.token.filter((t: Token) => filterWalletToken(t, wallet))
+      state.asset.tokens.filter(
+        (t: Token) => walletApi?.filterWalletToken(t) ?? false
+      )
     )
   })
 
@@ -88,25 +87,50 @@ export default function Transfer({
   }
 
   const contacts = useAppSelector((state) =>
-    (state.setting.contacts || []).filter((t) => t.chain === wallet?.chain)
+    (state.setting.contacts || []).filter((t) => {
+      return t.chain === wallet?.chain && t?.networkType === wallet?.networkType
+    })
   )
   const contact = contacts.find((c) => c.address === receiver)
 
   useEffect(() => {
-    isValidReceiverAddress(receiver, wallet).then(setIsValidAddress)
-  }, [receiver])
+    if (!selectedToken && walletApi && tokens.length) {
+      setSelectedToken(tokens[0])
+    }
+  }, [walletApi, selectedToken, tokens.length])
+
+  useEffect(() => {
+    if (!walletApi || !wallet) return
+    if (contact) {
+      setIsValidAddress(true)
+      return
+    }
+    const network = walletApi.getNetwork()
+
+    walletApi
+      ?.isValidAddress(receiver, network.type)
+      .then((isValid) => {
+        setIsValidAddress(isValid)
+      })
+      .catch(() => {})
+  }, [receiver, walletApi, wallet, contact])
 
   const onPreview = async () => {
-    Keyboard.dismiss()
-    if (!isValidReceiverAddress(receiver, wallet)) {
-      return Toast.error(i18n.t('Invalid receiver ID'))
+    if (!walletApi) {
+      return Toast.error(i18n.t('Wallet not found'))
     }
+    Keyboard.dismiss()
     if (!isValidAmount(amount, selectedToken)) {
       return Toast.error(i18n.t('Invalid amount'))
     }
     if (!wallet) {
       return Toast.error(i18n.t('No account found'))
     }
+    const network = walletApi.getNetwork()
+    if (!(await walletApi.isValidAddress(receiver, network.type))) {
+      return Toast.error(i18n.t('Invalid receiver ID'))
+    }
+
     setTxPreview({
       from: wallet,
       to: receiver,
@@ -122,10 +146,10 @@ export default function Transfer({
     }
     try {
       setIsConfirming(true)
-      await WalletAPI.transfer(txPreview)
+      await walletApi?.transfer(txPreview)
       navigation.dispatch(StackActions.popToTop())
       setTimeout(() => {
-        Toast.success('Transfering')
+        Toast.success(i18n.t('Transfering'))
       }, 1000)
       setIsConfirming(false)
     } catch (error) {
@@ -196,11 +220,32 @@ export default function Transfer({
                   contactListRef.current?.expand()
                 }}
               >
-                <UserCircleAlt
-                  width={30}
-                  height={30}
-                  color={Colors[theme].link}
-                />
+                {contact ||
+                (receiver && wallet?.chain === Chain.NEAR && isValidAddress) ? (
+                  <Avatar
+                    wallet={
+                      contact! ?? {
+                        address: receiver,
+                        chain: wallet?.chain,
+                        networkType: wallet?.networkType,
+                      }
+                    }
+                    size={30}
+                    placeholder={
+                      <UserCircleAlt
+                        width={30}
+                        height={30}
+                        color={Colors[theme].link}
+                      />
+                    }
+                  />
+                ) : (
+                  <UserCircleAlt
+                    width={30}
+                    height={30}
+                    color={Colors[theme].link}
+                  />
+                )}
               </Pressable>
             </Box>
           </Box>
@@ -212,8 +257,8 @@ export default function Transfer({
                   setAmount(
                     formatBalance(
                       selectedToken?.balance,
-                      selectedToken.decimals,
-                      selectedToken.decimals
+                      selectedToken?.decimals,
+                      selectedToken?.decimals
                     )
                   )
                 }}
@@ -228,7 +273,7 @@ export default function Transfer({
                   {`${i18n.t('Balance')}: ${formatBalance(
                     selectedToken?.balance,
                     selectedToken?.decimals
-                  )} ${selectedToken.symbol}`}
+                  )} ${selectedToken?.symbol}`}
                 </Text>
               </Pressable>
             </Box>

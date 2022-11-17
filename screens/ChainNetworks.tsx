@@ -1,5 +1,5 @@
 import { useRoute } from '@react-navigation/native'
-import { CHAINS } from 'chain/common/constants'
+import WalletFactory from 'chain/WalletFactory'
 import Box from 'components/common/Box'
 import Button from 'components/common/Button'
 import ScreenHeader from 'components/common/ScreenHeader'
@@ -11,7 +11,7 @@ import { useAppSelector } from 'store/hooks'
 import Colors from 'theme/Colors'
 import Fonts from 'theme/Fonts'
 import Styles from 'theme/Styles'
-import { Chain, NetworkBase, RootStackScreenProps } from 'types'
+import { Chain, NetworkType, RootStackScreenProps } from 'types'
 import { formatNodeUrl } from 'utils/format'
 
 export default function ChainNetworks({
@@ -24,11 +24,14 @@ export default function ChainNetworks({
     (state.setting.networks || []).filter((t) => t.chain === chainType)
   )
 
-  const chain = CHAINS.find((chain) => chain.chain === chainType)
+  const chain = WalletFactory.getChains().find(
+    (chain) => chain.chain === chainType
+  )
 
   if (!chain) {
     return null
   }
+
   return (
     <View style={Styles.fill}>
       <ScreenHeader title={chainType} />
@@ -36,6 +39,7 @@ export default function ChainNetworks({
         <Box direction="column" gap="small" full>
           <Box direction="column" gap="small" full>
             {Object.keys(chain?.defaultNetworks).map((networkType) => {
+              const nt = networkType as NetworkType
               return (
                 <View
                   key={networkType}
@@ -48,10 +52,7 @@ export default function ChainNetworks({
                 >
                   <Text style={styles.networkName}>{networkType}</Text>
                   <Text style={styles.nodeUrl}>
-                    {formatNodeUrl(
-                      (chain?.defaultNetworks[networkType] as NetworkBase)
-                        .nodeUrl
-                    )}
+                    {formatNodeUrl(chain?.defaultNetworks[nt]!.nodeUrl)}
                   </Text>
                 </View>
               )
@@ -59,41 +60,41 @@ export default function ChainNetworks({
           </Box>
 
           <Box direction="column" gap="small" full>
-            {chainType !== Chain.OCT && [
-              <Box
-                key="custom-networks"
-                direction="column"
-                align="flex-start"
-                full
-              >
-                <Text style={styles.title}>{i18n.t('Custom Networks')}</Text>
-                {customNetworks.map((network) => {
-                  return (
-                    <Pressable
-                      key={network.nodeUrl}
-                      style={{ width: '100%', marginBottom: 10 }}
-                      onPress={() =>
-                        navigation.navigate('NewNetwork', {
-                          chain: chainType,
-                          network,
-                        })
-                      }
+            <Box
+              key="custom-networks"
+              direction="column"
+              align="flex-start"
+              full
+            >
+              <Text style={styles.title}>{i18n.t('Custom Networks')}</Text>
+              {customNetworks.map((network) => {
+                return (
+                  <Pressable
+                    key={network.nodeUrl}
+                    style={{ width: '100%', marginBottom: 10 }}
+                    onPress={() =>
+                      navigation.navigate('NewNetwork', {
+                        chain: chainType,
+                        network,
+                      })
+                    }
+                  >
+                    <View
+                      style={[
+                        styles.networkWrap,
+                        {
+                          backgroundColor: Colors[theme].cardBackground,
+                        },
+                      ]}
                     >
-                      <View
-                        style={[
-                          styles.networkWrap,
-                          {
-                            backgroundColor: Colors[theme].cardBackground,
-                          },
-                        ]}
-                      >
-                        <Text style={styles.networkName}>{network.name}</Text>
-                        <Text style={styles.nodeUrl}>{network.nodeUrl}</Text>
-                      </View>
-                    </Pressable>
-                  )
-                })}
-              </Box>,
+                      <Text style={styles.networkName}>{network.name}</Text>
+                      <Text style={styles.nodeUrl}>{network.nodeUrl}</Text>
+                    </View>
+                  </Pressable>
+                )
+              })}
+            </Box>
+            {WalletFactory.isCustomNetworkSupported(chainType) && (
               <Button
                 key="add-custom-network"
                 label={i18n.t('Add Custom Network')}
@@ -102,8 +103,8 @@ export default function ChainNetworks({
                 onPress={() =>
                   navigation.navigate('NewNetwork', { chain: chainType })
                 }
-              />,
-            ]}
+              />
+            )}
           </Box>
         </Box>
       </ScrollView>

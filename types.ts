@@ -7,7 +7,6 @@ import { NativeStackScreenProps } from '@react-navigation/native-stack'
 import { ImageSourcePropType } from 'react-native'
 import { Notification } from 'expo-notifications'
 import type { Transaction } from '@near-wallet-selector/core'
-import { SuiMoveObject } from '@mysten/sui.js'
 
 declare global {
   namespace ReactNavigation {
@@ -91,7 +90,6 @@ export type Token = {
   address?: string
   chain: Chain
   networkType: CombineNetworkType
-  moveObjects?: SuiMoveObject[]
 }
 
 export type NFT = {
@@ -114,6 +112,10 @@ export type Project = {
   title: string
   oneliner?: string
   website: URL
+  query?: {
+    address: string
+    refer: string
+  }
 }
 
 export interface DApp {

@@ -56,7 +56,9 @@ export default function SettingBlock({
                   },
                 ]}
               >
-                <Text style={styles.key}>{i18n.t(item.title)}</Text>
+                <Text style={styles.key}>
+                  {i18n.t(item.title, { defaultValue: item.title })}
+                </Text>
 
                 <Box direction="row" align="center" justify="center">
                   {typeof item.value === 'string' ? (

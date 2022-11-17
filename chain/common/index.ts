@@ -1,5 +1,5 @@
 import * as bip39 from 'bip39'
-import { Token, Wallet } from 'types'
+import { Token } from 'types'
 import * as Random from 'expo-random'
 import { calcValue, parseAmount } from 'utils/format'
 import Decimal from 'decimal.js'

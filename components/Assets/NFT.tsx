@@ -16,7 +16,7 @@ import { NFTContractMetadata, NFTItem, NFTsByCollection } from 'types'
 import icons from 'utils/icons'
 
 export default function NFT() {
-  const { walletApi, wallet } = useWallet()
+  const { walletApi } = useWallet()
   const [nfts, setNfts] = useState<
     { nft: NFTItem; contract: NFTContractMetadata }[]
   >([])

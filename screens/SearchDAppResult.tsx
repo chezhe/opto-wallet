@@ -7,18 +7,17 @@ import ProjectItem from 'components/Project/Item'
 import { View } from 'components/Themed'
 import Colors from 'theme/Colors'
 import useColorScheme from 'hooks/useColorScheme'
-import { useAppSelector } from 'store/hooks'
 import { Project, RootStackScreenProps } from 'types'
 import Fonts from 'theme/Fonts'
 import { i18n } from 'locale'
 import { useEffect, useState } from 'react'
-import { searchDapps } from 'utils/fetch'
+import useWallet from 'hooks/useWallet'
 
 export default function SearchDAppResult({
   navigation,
 }: RootStackScreenProps<'SearchDAppResult'>) {
   const { params } = useRoute()
-  const wallet = useAppSelector((state) => state.wallet.current)
+  const { walletApi } = useWallet()
   const [searching, setSearching] = useState(true)
   const keyword = (params as any).keyword as string
   const [result, setResult] = useState<Project[]>([])
@@ -26,7 +25,8 @@ export default function SearchDAppResult({
   const theme = useColorScheme()
 
   useEffect(() => {
-    searchDapps(wallet?.chain!, keyword)
+    walletApi
+      ?.searchDApps(keyword)
       .then((res) => {
         setSearching(false)
         setResult(res)
@@ -34,7 +34,7 @@ export default function SearchDAppResult({
       .catch(() => {
         setSearching(false)
       })
-  }, [keyword, wallet?.chain])
+  }, [keyword, walletApi])
 
   const goProject = (project: Project) => {
     navigation.navigate('DAppView', {

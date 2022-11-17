@@ -1,4 +1,4 @@
-import { CHAINS } from 'chain/common/constants'
+import WalletFactory from 'chain/WalletFactory'
 import Box from 'components/common/Box'
 import ScreenHeader from 'components/common/ScreenHeader'
 import { Text, View } from 'components/Themed'
@@ -9,7 +9,7 @@ import { Image, Pressable, ScrollView, StyleSheet } from 'react-native'
 import Colors from 'theme/Colors'
 import Fonts from 'theme/Fonts'
 import Styles from 'theme/Styles'
-import { Chain, RootStackScreenProps } from 'types'
+import { RootStackScreenProps } from 'types'
 
 export default function Networks({
   navigation,
@@ -20,7 +20,7 @@ export default function Networks({
       <ScreenHeader title={i18n.t('Networks')} />
       <ScrollView style={Styles.scrollview}>
         <Box direction="column" gap="small" full>
-          {CHAINS.map((chain) => {
+          {WalletFactory.getChains().map((chain) => {
             return (
               <Pressable
                 key={chain.chain}

@@ -116,7 +116,7 @@ export default function Banner({ isLoading }: { isLoading: boolean }) {
           {wallet ? (
             <Avatar
               wallet={wallet}
-              size={36}
+              size={40}
               placeholder={
                 <Icon
                   isTransparent
@@ -125,6 +125,7 @@ export default function Banner({ isLoading }: { isLoading: boolean }) {
                 />
               }
               onAvatarLoaded={onAvatarLoaded}
+              style={{ margin: 5 }}
             />
           ) : (
             <Icon

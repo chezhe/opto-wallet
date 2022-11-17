@@ -16,7 +16,7 @@ export default {
   oct: '#0845A5',
   sun: '#f74e73',
   e3: '#e3e3e3',
-  main: '#f74f73',
+  main: '#06b5e2',
   chain: {
     NEAR: '#333',
     OCT: '#0845A5',

@@ -80,6 +80,7 @@ export default function VerifyMnemonic({
           type={ButtonType.PRIMARY}
           style={{ marginHorizontal: 0, width: 160 }}
           onPress={onNext}
+          isLoading={creating}
           disabled={!isValid || creating}
         />
       </Box>
