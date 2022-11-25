@@ -59,28 +59,16 @@ export default function Create({ navigation }: RootStackScreenProps<'Create'>) {
     }
     try {
       setCreating(true)
-      if (chain) {
-        const wallet = await WalletFactory.createWalletFromMnemonic(chain, {
-          networkType,
-          accountId,
-          mnemonic,
-        })
-
-        dispatch({
-          type: 'wallet/add',
-          payload: { ...wallet, publicKey: undefined },
-        })
-      } else {
-        const nWallet = await WalletFactory.createWalletFromMnemonic(chain, {
-          networkType,
-          accountId,
-          mnemonic,
-        })
-        dispatch({
-          type: 'wallet/add',
-          payload: nWallet,
-        })
-      }
+      const nWallet = await WalletFactory.createWalletFromMnemonic(chain, {
+        networkType,
+        accountId,
+        mnemonic,
+      })
+      dispatch({
+        type: 'wallet/add',
+        payload: nWallet,
+      })
+      
       setCreating(false)
       if (pincode) {
         navigation.dispatch(StackActions.popToTop())
