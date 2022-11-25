@@ -36,7 +36,11 @@ expo start --dev-client
     - [x] Mnemonic
     - [x] Private Key
     - [x] From Near Wallet
+      - [x] testnet
     - [x] From Ledger
+  - [x] Export
+    - [x] Mnemonic
+    - [x] Private key
   - [x] Export
     - [x] Mnemonic
     - [x] Private Key
