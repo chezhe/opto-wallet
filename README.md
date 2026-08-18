@@ -1,3 +1,5 @@
+
+
 # Opto Wallet
 
 <img src="https://optowallet.com/logo.png" width="300" height="300" />
@@ -17,7 +19,7 @@ eas build --platform android
 eas submit --platform android
 ```
 
-Build a development version
+Build an iOS development version
 
 ```ts
 eas build --profile development --platform ios
